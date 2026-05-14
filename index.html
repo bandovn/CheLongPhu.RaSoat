@@ -282,11 +282,6 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
   background:#fafbfa;border-top:1px solid var(--border);
   padding:14px 18px;display:flex;align-items:center;gap:14px;margin-top:16px;border-radius:8px
 }
-.footer-thanha .logo-th{
-  width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#43a047,#1b5e20);
-  display:flex;align-items:center;justify-content:center;color:#fff;
-  font:700 13px Georgia,serif;letter-spacing:.5px;flex-shrink:0;box-shadow:0 0 0 3px rgba(212,160,23,.3)
-}
 .footer-thanha .ft{font-size:12.5px;line-height:1.6;color:var(--text-mid)}
 .footer-thanha .ft b{color:var(--primary-dk)}
 
@@ -314,6 +309,28 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
 .toast.ok{background:#2e7d32}
 .toast.err{background:#c62828}
 
+/* Logo Thanh Hà ở header */
+.h-thanha{
+  display:flex;align-items:center;gap:9px;padding:6px 12px;
+  background:rgba(255,255,255,.95);border-radius:8px;
+  border:1px solid rgba(212,160,23,.3);
+  box-shadow:0 2px 6px rgba(0,0,0,.15);margin-left:6px
+}
+.h-thanha img{height:34px;width:auto;display:block}
+.h-thanha .ht-text{display:flex;flex-direction:column;line-height:1.2}
+.h-thanha .ht-text .ht-lbl{font-size:9.5px;color:#7a8b7a;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+.h-thanha .ht-text .ht-name{font-size:11px;color:var(--primary-dk);font-weight:700;white-space:nowrap}
+
+/* Footer Thanh Hà có logo thật */
+.footer-thanha img.ft-logo{
+  width:80px;height:auto;flex-shrink:0;
+  background:#fff;padding:4px;border-radius:8px;
+  box-shadow:0 2px 6px rgba(0,0,0,.08)
+}
+
+@media(max-width:1100px){
+  .h-thanha .ht-text{display:none}
+}
 @media(max-width:768px){
   .sidebar{width:280px}
   .detail{width:100%}
@@ -336,6 +353,13 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
     <div class="h-stat"><span class="lbl">Tổng thửa</span><span class="val" id="s-total">—</span></div>
     <div class="h-stat"><span class="lbl">Hiển thị</span><span class="val" id="s-vis">—</span></div>
     <div class="h-stat"><span class="lbl">Tổng DT</span><span class="val"><span id="s-area">—</span> <span>ha</span></span></div>
+    <div class="h-thanha" title="Đơn vị xây dựng: Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà">
+      <img src="logo.jpg" alt="Thanh Hà">
+      <div class="ht-text">
+        <span class="ht-lbl">Đơn vị xây dựng</span>
+        <span class="ht-name">Công ty Thanh Hà</span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -486,7 +510,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
         <p>Thông tư 07/2015/TT-BTNMT đã bị bãi bỏ bởi Thông tư 20/2024 từ 01/01/2025, hiện chưa có thông tư mới thay thế. Hệ thống chỉ phục vụ rà soát nội bộ; các phương án phải tuân thủ pháp luật hiện hành tại thời điểm trình duyệt.</p>
 
         <div class="footer-thanha">
-          <div class="logo-th">TH</div>
+          <img src="logo.jpg" alt="Thanh Hà" class="ft-logo">
           <div class="ft">
             <b>Đơn vị xây dựng:</b> Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà<br>
             <b>Liên hệ:</b> Mr Tuấn — 0911 558 628
@@ -540,15 +564,27 @@ let userEdits = {};
 try{ userEdits = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); }catch(e){ userEdits={}; }
 
 // ===== MAP INIT =====
+let canvasRenderer;
 function initMap(){
-  map = L.map('map',{preferCanvas:true}).setView([20.952,105.553],14);
+  // Canvas renderer dùng chung - tăng tốc render polygon hàng loạt
+  canvasRenderer = L.canvas({padding: 0.5, tolerance: 4});
+  map = L.map('map',{
+    preferCanvas:true,
+    renderer: canvasRenderer,
+    zoomAnimation: true,
+    fadeAnimation: false,  // tắt fade để render nhanh hơn
+    markerZoomAnimation: false
+  }).setView([20.952,105.553],14);
   const sat = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{maxZoom:21,subdomains:['mt0','mt1','mt2','mt3'],attribution:'© Google'});
   const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
   const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenTopoMap',subdomains:'abc'});
   sat.addTo(map);
   L.control.layers({'Vệ tinh':sat,'Đường phố':street,'Địa hình':topo},null,{position:'topright'}).addTo(map);
-  // Coord display
+  // Coord display - throttle để khỏi lag
+  let coordThrottle;
   map.on('mousemove', e=>{
+    if(coordThrottle) return;
+    coordThrottle = setTimeout(()=>{ coordThrottle = null; }, 80);
     document.getElementById('coord-display').textContent = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
   });
 }
@@ -564,6 +600,9 @@ const HL_STYLE = {weight:3,color:'#ffd966',fillOpacity:0.85,opacity:1};
 
 // ===== LOAD =====
 async function loadData(){
+  const loadingEl = document.getElementById('loading');
+  const loadingText = loadingEl.querySelector('.loading-text');
+
   // Thử tải từ cùng folder trước, fallback sang data/
   let res, url;
   for(const u of ['diachinh.geojson','data/diachinh.geojson']){
@@ -573,7 +612,7 @@ async function loadData(){
     }catch(e){}
   }
   if(!res || !res.ok){
-    document.getElementById('loading').innerHTML = `
+    loadingEl.innerHTML = `
       <div style="color:#b71c1c;text-align:center;padding:20px;max-width:500px">
         <strong style="font-size:15px">Lỗi tải dữ liệu</strong><br>
         <small style="display:block;margin-top:8px;color:#555">Không tìm thấy file <code>diachinh.geojson</code></small>
@@ -584,10 +623,48 @@ async function loadData(){
       </div>`;
     return;
   }
-  allData = await res.json();
-  renderAll();
-  document.getElementById('loading').style.display='none';
+
+  // Hiển thị progress khi tải
+  if(loadingText) loadingText.textContent = 'Đang tải dữ liệu địa chính...';
+
+  // Đọc với progress nếu có Content-Length
+  const contentLength = +res.headers.get('Content-Length');
+  if(contentLength && res.body && res.body.getReader){
+    try{
+      const reader = res.body.getReader();
+      let received = 0;
+      const chunks = [];
+      while(true){
+        const {done, value} = await reader.read();
+        if(done) break;
+        chunks.push(value);
+        received += value.length;
+        const pct = Math.round(received / contentLength * 100);
+        if(loadingText) loadingText.textContent = `Đang tải dữ liệu... ${pct}%`;
+      }
+      const blob = new Blob(chunks);
+      const text = await blob.text();
+      allData = JSON.parse(text);
+    }catch(e){
+      // Fallback nếu reader fail
+      allData = await (await fetch(url)).json();
+    }
+  } else {
+    allData = await res.json();
+  }
+
+  if(loadingText) loadingText.textContent = 'Đang dựng bản đồ...';
+  // Cho UI cập nhật trước khi render
+  await new Promise(r=>setTimeout(r,30));
+
+  buildFilters();
+  initStatChips();
+  // Ẩn loading TRƯỚC khi render layer - người dùng thấy map ngay
+  loadingEl.style.display='none';
   toast(`Đã tải ${allData.features.length.toLocaleString('vi-VN')} thửa đất`,'ok');
+  // Render layer bất đồng bộ
+  await new Promise(r=>setTimeout(r,10));
+  applyFilters();
 }
 
 function renderAll(){
@@ -664,20 +741,41 @@ function applyFilters(){
   document.getElementById('s-vis').textContent = filtered.length.toLocaleString('vi-VN');
 }
 
+// Tooltip dùng chung - tránh tạo 4323 tooltip instance
+let sharedTooltip = null;
+function showQuickTooltip(layer, p){
+  if(!sharedTooltip){
+    sharedTooltip = L.tooltip({sticky:true, direction:'top', opacity:0.92});
+  }
+  sharedTooltip.setContent(`<b>${p.tbd}-${p.thua}</b><br>${p.ten||''}`);
+  layer.bindTooltip(sharedTooltip).openTooltip();
+}
+
 function drawLayer(){
   if(geoLayer) map.removeLayer(geoLayer);
   geoLayer = L.geoJSON({type:'FeatureCollection',features:filtered},{
+    renderer: canvasRenderer,
     style: f=>styleFor(f.properties),
     onEachFeature:(f,layer)=>{
       const p=f.properties;
       layer.on({
         click:()=>selectFeature(p.id),
-        mouseover:()=>{ if(p.id!==selectedId) layer.setStyle({weight:1.5,color:'#fff'}); },
+        mouseover:()=>{
+          if(p.id!==selectedId) layer.setStyle({weight:1.5,color:'#fff'});
+          showQuickTooltip(layer, p);
+        },
         mouseout:()=>{ if(p.id!==selectedId) layer.setStyle(styleFor(p)); }
       });
-      layer.bindTooltip(`<b>${p.tbd}-${p.thua}</b><br>${p.ten||''}`,{sticky:true,direction:'top'});
     }
   }).addTo(map);
+
+  // Lần đầu tiên - zoom vào vùng có dữ liệu
+  if(!window._mapFitDone && filtered.length > 0){
+    try{
+      map.fitBounds(geoLayer.getBounds(), {padding:[20,20], maxZoom:15});
+      window._mapFitDone = true;
+    }catch(e){}
+  }
 }
 
 function renderResults(){
@@ -988,7 +1086,7 @@ function buildStats(){
 
   // Footer Thanh Hà
   h += `<div class="footer-thanha" style="margin-top:18px">
-    <div class="logo-th">TH</div>
+    <img src="logo.jpg" alt="Thanh Hà" class="ft-logo">
     <div class="ft">
       <b>Đơn vị xây dựng:</b> Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà<br>
       <b>Liên hệ:</b> Mr Tuấn — 0911 558 628
