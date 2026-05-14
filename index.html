@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Rà soát đất Công ty CP Chè Long Phú</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="logo">LP</div>
+    <div>
+      <div class="title">Rà soát đất Công ty CP Chè Long Phú</div>
+      <div class="subtitle">UBND xã Phú Cát • Phương án theo Điều 181 Luật ĐĐ 2024</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="nav-btn active" data-view="map">Bản đồ</button>
+    <button class="nav-btn" data-view="table">Tra cứu</button>
+    <button class="nav-btn" data-view="dashboard">Thống kê</button>
+    <button class="nav-btn" data-view="help">Hướng dẫn</button>
+  </header>
+
+  <main class="main">
+    <aside class="sidebar" id="sidebar">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="Tìm thửa, chủ SD...">
+      </div>
+
+      <div class="filter-group">
+        <div class="section-title">Đề xuất xử lý</div>
+        <label class="filter-row">
+          <input type="checkbox" data-filter="de_xuat" value="da_bangiao_2018" checked>
+          <span class="swatch" style="background:#BFD8EF;border:0.5px solid #1565c0"></span>
+          <span>Đã bàn giao 2018</span>
+          <span class="count" data-count="dx-da_bangiao_2018">—</span>
+        </label>
+        <label class="filter-row">
+          <input type="checkbox" data-filter="de_xuat" value="tieptuc_bangiao" checked>
+          <span class="swatch" style="background:#F5C4B3;border:0.5px solid #ef6c00"></span>
+          <span>Tiếp tục bàn giao về địa phương</span>
+          <span class="count" data-count="dx-tieptuc_bangiao">—</span>
+        </label>
+        <label class="filter-row">
+          <input type="checkbox" data-filter="de_xuat" value="giulai_cph" checked>
+          <span class="swatch" style="background:#D6B8DE;border:0.5px solid #7b1fa2"></span>
+          <span>Giữ lại theo PA CPH</span>
+          <span class="count" data-count="dx-giulai_cph">—</span>
+        </label>
+        <label class="filter-row">
+          <input type="checkbox" data-filter="de_xuat" value="rasoat_them" checked>
+          <span class="swatch" style="background:#F4B7B7;border:0.5px solid #c62828"></span>
+          <span>Cần rà soát thêm</span>
+          <span class="count" data-count="dx-rasoat_them">—</span>
+        </label>
+      </div>
+
+      <div class="filter-group">
+        <div class="section-title">Phân theo xã cũ</div>
+        <div id="filter-xa"></div>
+      </div>
+
+      <div class="filter-group">
+        <div class="section-title">Loại đất</div>
+        <div id="filter-loai" style="max-height:200px;overflow-y:auto;padding-right:4px"></div>
+      </div>
+    </aside>
+
+    <div class="map-area" id="view-map">
+      <div id="map"></div>
+      <div class="loading" id="map-loading">Đang tải 4.323 thửa đất...</div>
+
+      <div class="map-overlay-tr">
+        <div><strong id="visible-count">—</strong> thửa hiển thị</div>
+        <div style="color:var(--text-secondary);margin-top:2px">trên tổng <strong id="total-count">—</strong></div>
+      </div>
+
+      <div class="map-overlay-bl">
+        <div style="font-weight:500;margin-bottom:4px">Chú giải đề xuất</div>
+        <div class="legend-row"><span class="swatch" style="background:#BFD8EF;border:0.5px solid #1565c0"></span>Đã bàn giao 2018</div>
+        <div class="legend-row"><span class="swatch" style="background:#F5C4B3;border:0.5px solid #ef6c00"></span>Tiếp tục bàn giao về địa phương</div>
+        <div class="legend-row"><span class="swatch" style="background:#D6B8DE;border:0.5px solid #7b1fa2"></span>Giữ lại theo PA CPH</div>
+        <div class="legend-row"><span class="swatch" style="background:#F4B7B7;border:0.5px solid #c62828"></span>Cần rà soát thêm</div>
+      </div>
+
+      <!-- Logo Thanh Hà ở góc dưới trái -->
+      <div class="thanha-footer" title="Đơn vị xây dựng: Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà">
+        <img src="logo.jpg" alt="Thanh Hà">
+        <div class="th-text">
+          <div class="th-line1">Đơn vị xây dựng</div>
+          <div class="th-line2">Công ty CP Tư vấn Ứng dụng<br>và Phát triển Công nghệ Thanh Hà</div>
+          <div class="th-line3">Mr Tuấn — 0911 558 628</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="view-table hidden" id="view-table">
+      <div class="table-controls">
+        <input type="text" id="table-search" placeholder="Tìm tên chủ SD..." style="flex:1;min-width:200px">
+        <select id="table-xa">
+          <option value="">Tất cả xã cũ</option>
+          <option value="Phú Cát">Phú Cát (cũ)</option>
+          <option value="Hòa Thạch">Hòa Thạch (cũ)</option>
+          <option value="Đông Yên">Đông Yên (cũ)</option>
+        </select>
+        <select id="table-dx">
+          <option value="">Tất cả đề xuất</option>
+          <option value="da_bangiao_2018">Đã bàn giao 2018</option>
+          <option value="tieptuc_bangiao">Tiếp tục bàn giao về địa phương</option>
+          <option value="giulai_cph">Giữ lại theo PA CPH</option>
+          <option value="rasoat_them">Cần rà soát thêm</option>
+        </select>
+        <button class="btn" onclick="exportFilteredCsv()">⬇ Xuất CSV</button>
+      </div>
+      <div class="thua-table" id="thua-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort="xa_cu">Xã cũ</th>
+              <th data-sort="tbd">Tờ</th>
+              <th data-sort="thua">Thửa</th>
+              <th data-sort="ten">Chủ SD</th>
+              <th data-sort="loai">Loại đất</th>
+              <th data-sort="dt" class="num">DT (m²)</th>
+              <th data-sort="dt_tt" class="num">DT thực tế</th>
+              <th data-sort="tg_khoan">Thời gian khoán</th>
+              <th data-sort="de_xuat">Đề xuất</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+
+    <div class="view-dashboard hidden" id="view-dashboard">
+      <h1 style="font-size:18px;font-weight:500;margin-bottom:16px">Thống kê tổng quan</h1>
+
+      <div class="dashboard-grid">
+        <div class="dashboard-card">
+          <div class="label">Tổng số thửa</div>
+          <div class="value" id="stat-total">—</div>
+          <div class="delta">Theo bản đồ đo đạc 2016 (41 tờ)</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="label">Tổng diện tích</div>
+          <div class="value" id="stat-area">— ha</div>
+          <div class="delta" id="stat-area-m2">— m² đã đo đạc</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="label">Đã bàn giao 2018</div>
+          <div class="value" id="stat-da" style="color:#1565c0">— thửa</div>
+          <div class="delta" id="stat-da-ha">— ha</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="label">Tiếp tục bàn giao</div>
+          <div class="value" id="stat-tt" style="color:#ef6c00">— thửa</div>
+          <div class="delta" id="stat-tt-ha">— ha</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="label">Giữ lại theo PA CPH</div>
+          <div class="value" id="stat-gl" style="color:#7b1fa2">— thửa</div>
+          <div class="delta" id="stat-gl-ha">— ha</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="label">Cần rà soát thêm</div>
+          <div class="value" id="stat-rs" style="color:#c62828">— thửa</div>
+          <div class="delta">Chưa xác định loại đất</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="label">Đã rà soát thực địa</div>
+          <div class="value" id="stat-progress">0%</div>
+          <div class="delta">Cập nhật bởi cán bộ</div>
+        </div>
+      </div>
+
+      <div class="dashboard-section">
+        <h2>Phân bổ theo xã cũ</h2>
+        <table class="simple" id="table-by-xa">
+          <thead><tr><th>Xã cũ</th><th class="num">Số thửa</th><th class="num">Diện tích (ha)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="dashboard-section">
+        <h2>Phân bổ theo loại đất</h2>
+        <table class="simple" id="table-by-loai">
+          <thead><tr><th>Loại đất</th><th>Tên</th><th class="num">Số thửa</th><th class="num">Diện tích (ha)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="dashboard-section">
+        <h2>Phân bổ theo thời gian nhận khoán (Biểu 3)</h2>
+        <table class="simple" id="table-by-time">
+          <thead><tr><th>Mốc thời gian</th><th class="num">Số thửa</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <p style="margin-top:16px;font-size:12px;color:var(--text-secondary);font-style:italic">
+        <strong>Lưu ý:</strong> Số liệu sơ bộ phân loại tự động từ dữ liệu rà soát 2019. Cần rà soát thực địa và cán bộ xã duyệt cuối để có số liệu chính thức cho phương án theo Điều 181.
+      </p>
+    </div>
+
+    <div class="view-help hidden" id="view-help">
+      <h1 style="font-size:18px;font-weight:500;margin-bottom:16px">Hướng dẫn sử dụng</h1>
+
+      <div class="help-section">
+        <h2>1. Mục đích hệ thống</h2>
+        <p>Hệ thống hỗ trợ rà soát toàn diện <strong>4.323 thửa đất</strong> (tổng <strong>490 ha</strong>) có nguồn gốc từ Công ty CP Chè Long Phú trên địa bàn 03 xã cũ: Phú Cát, Hòa Thạch, Đông Yên (nay là xã Phú Cát mới, Hà Nội), phục vụ lập phương án bàn giao và sử dụng đất theo Điều 181 Luật Đất đai 2024.</p>
+        <p>Hệ thống kế thừa kết quả đo đạc bản đồ địa chính năm 2016 (Sở TN&MT - Công ty Bình Minh, 41 tờ) và biểu rà soát 2019 (Báo cáo 500/BC-UBND ngày 19/8/2019).</p>
+      </div>
+
+      <div class="help-section">
+        <h2>2. Bốn nhóm đề xuất xử lý</h2>
+        <ul>
+          <li><strong style="color:#1565c0">Đã bàn giao 2018:</strong> Các thửa đã bàn giao về UBND xã theo 03 biên bản tháng 5-6/2018 (Phú Cát 30/5, Đông Yên 4/6, Hòa Thạch 6/6).</li>
+          <li><strong style="color:#ef6c00">Tiếp tục bàn giao về địa phương:</strong> Các thửa còn lại trừ đất TSC và TMD - đợt 2026.</li>
+          <li><strong style="color:#7b1fa2">Giữ lại theo PA CPH:</strong> Đất TSC (trụ sở), TMD (thương mại dịch vụ) giữ lại theo phương án CPH.</li>
+          <li><strong style="color:#c62828">Cần rà soát thêm:</strong> Thửa chưa xác định được loại đất hoặc chủ sử dụng.</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h2>3. Bốn nhóm pháp lý theo Biểu 3</h2>
+        <ul>
+          <li><strong>Đã giao khoán có hồ sơ:</strong> Có HĐ giao khoán theo NĐ 01/CP, 135/CP.</li>
+          <li><strong>Khoán trắng:</strong> Hộ sử dụng nhưng không có HĐ khoán.</li>
+          <li><strong>Lấn chiếm:</strong> Hộ lấn vào đất chè Cty CP CLP, trả về Cty.</li>
+          <li><strong>Tranh chấp:</strong> Có đơn thư khiếu nại, biên bản hòa giải chưa thành.</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h2>4. Sử dụng hệ thống</h2>
+        <ul>
+          <li><strong>Bản đồ:</strong> Click vào thửa để xem chi tiết. Dùng bộ lọc bên trái để xem theo nhóm.</li>
+          <li><strong>Tra cứu:</strong> Tìm kiếm theo tên chủ SD, lọc theo xã/đề xuất, xuất CSV.</li>
+          <li><strong>Thống kê:</strong> Xem tổng quan, phân bổ theo xã, loại đất, thời gian khoán.</li>
+          <li><strong>Sửa thông tin:</strong> Mở chi tiết thửa → cập nhật pháp lý, công trình, liên lạc. Lưu trong trình duyệt (localStorage).</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h2>5. Căn cứ pháp lý</h2>
+        <ul>
+          <li>Luật Đất đai 2024 — Điều 82, Điều 181</li>
+          <li>Nghị định 102/2024/NĐ-CP — Điều 33, 35, 67–69</li>
+          <li>Nghị định 151/2025/NĐ-CP, Nghị định 49/2026/NĐ-CP</li>
+          <li>Quyết định 33/2026/QĐ-UBND Hà Nội về phân cấp</li>
+          <li>Kết luận thanh tra 170/KLTT-STNMT-ĐTTr ngày 08/01/2025</li>
+          <li>Báo cáo 500/BC-UBND ngày 19/8/2019 của UBND huyện Quốc Oai</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h2>6. Lưu ý về phiên bản tĩnh</h2>
+        <p>Phiên bản này chạy trên GitHub Pages, không có máy chủ và CSDL tập trung. Mọi thay đổi rà soát của cán bộ được lưu cục bộ trong trình duyệt và phải xuất ra file CSV/JSON để gộp về.</p>
+        <p>Thông tư 07/2015/TT-BTNMT đã bị bãi bỏ bởi Thông tư 20/2024 từ 01/01/2025, hiện chưa có thông tư mới thay thế. Hệ thống chỉ phục vụ rà soát nội bộ; các phương án phải tuân thủ pháp luật hiện hành tại thời điểm trình duyệt.</p>
+      </div>
+    </div>
+
+    <aside class="rightbar" id="rightbar">
+      <button class="bottom-sheet-close" onclick="closeRightbarMobile()">✕</button>
+      <div id="thua-detail">
+        <div class="thua-detail-empty">
+          👆 Click vào một thửa trên bản đồ<br>để xem chi tiết
+        </div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<!-- Modal sửa thông tin -->
+<div class="modal-bg" id="edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="title">Cập nhật thông tin thửa <span id="edit-thua-id"></span></div>
+      <button class="close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Quan hệ pháp lý hiện tại</label>
+          <select id="edit-phap-ly">
+            <option value="">— Chưa xác định —</option>
+            <option>Sử dụng đúng mục đích</option>
+            <option>Không sử dụng</option>
+            <option>Sử dụng không đúng mục đích</option>
+            <option>Giao khoán theo NĐ 01/CP, 135/CP</option>
+            <option>Khoán trắng</option>
+            <option>Bị lấn, bị chiếm</option>
+            <option>Đang có tranh chấp</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Trạng thái kê khai</label>
+          <select id="edit-ke-khai">
+            <option value="">— Chưa kê khai —</option>
+            <option>Đã kê khai - không biến động</option>
+            <option>Đã kê khai - có biến động</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Diện tích công trình (m²)</label>
+          <input type="number" id="edit-ct-dt" placeholder="VD: 80">
+        </div>
+        <div class="form-group">
+          <label>Năm xây dựng</label>
+          <input type="number" id="edit-ct-nam" placeholder="VD: 2005">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Loại công trình</label>
+        <select id="edit-ct-loai">
+          <option value="">— Không có —</option>
+          <option>Nhà ở cấp 4</option>
+          <option>Nhà ở 1 tầng</option>
+          <option>Nhà ở 2 tầng trở lên</option>
+          <option>Nhà cấp 3 (kiên cố)</option>
+          <option>Nhà tạm</option>
+          <option>Chuồng trại</option>
+          <option>Nhà xưởng</option>
+          <option>Công trình phụ trợ</option>
+          <option>Khác</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>SĐT chủ sử dụng</label>
+          <input type="text" id="edit-sdt" placeholder="VD: 0912 345 678">
+        </div>
+        <div class="form-group">
+          <label>Người liên hệ thay (nếu có)</label>
+          <input type="text" id="edit-nguoi-lh" placeholder="Con/cháu...">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Ghi chú rà soát</label>
+        <textarea id="edit-ghi-chu" rows="3" style="resize:vertical" placeholder="Tranh chấp, lấn chiếm, mô tả công trình..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Người rà soát</label>
+          <input type="text" id="edit-nguoi-ra-soat" placeholder="Họ tên cán bộ">
+        </div>
+        <div class="form-group">
+          <label>Ngày rà soát</label>
+          <input type="date" id="edit-ngay-ra-soat">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeEditModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveEditClassification()">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
