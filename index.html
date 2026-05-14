@@ -3,266 +3,323 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rà soát đất Công ty CP Chè Long Phú - WebGIS 2026</title>
+<title>Rà soát đất Công ty CP Chè Long Phú</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
-
+:root{
+  --primary:#1b5e20;
+  --primary-dk:#0d3a11;
+  --primary-lt:#43a047;
+  --accent:#d4a017;
+  --accent-dk:#b8860b;
+  --bg:#f5f7f4;
+  --panel:#ffffff;
+  --text:#1a2520;
+  --text-mid:#5d6d63;
+  --text-mute:#90a097;
+  --border:#dde3dd;
+  --border-lt:#eef2ee;
+  --shadow:0 2px 12px rgba(13,58,17,.08);
+  --shadow-lg:0 8px 28px rgba(13,58,17,.15);
+  --r:8px;
+  /* màu nhóm đề xuất */
+  --c-da:#1565c0;
+  --c-tt:#ef6c00;
+  --c-giu:#7b1fa2;
+  --c-rs:#c62828;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;font-family:'Be Vietnam Pro',sans-serif;color:#1d2733;background:#0d1b2a}
+html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--text);background:var(--bg);font-size:14px}
 
-/* ===== HEADER ===== */
+/* ============ HEADER ============ */
 .header{
-  background:linear-gradient(135deg,#0a2540 0%,#1e4a6f 50%,#2d6a4f 100%);
+  background:linear-gradient(135deg,var(--primary-dk) 0%,var(--primary) 60%,#2e7d32 100%);
   color:#fff;padding:10px 18px;display:flex;align-items:center;gap:14px;
-  border-bottom:2px solid #d4a017;z-index:1500;position:relative;
-  box-shadow:0 2px 12px rgba(0,0,0,.3)
+  border-bottom:3px solid var(--accent);
+  box-shadow:0 2px 10px rgba(0,0,0,.18);position:relative;z-index:1500
 }
-.logo{
-  width:42px;height:42px;border-radius:50%;
-  background:linear-gradient(135deg,#d4a017,#b8860b);
+.h-logo{
+  width:44px;height:44px;background:#fff;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-family:'Playfair Display',serif;font-size:20px;font-weight:700;
-  color:#0a2540;flex-shrink:0;
-  box-shadow:0 0 0 2px rgba(212,160,23,.3)
+  font:700 18px Georgia,serif;color:var(--primary-dk);flex-shrink:0;
+  box-shadow:0 0 0 3px rgba(212,160,23,.4)
 }
-.title h1{font-size:14px;font-weight:700;line-height:1.2;letter-spacing:.2px}
-.title p{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px}
-.header-right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.stat-chip{
-  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
-  border-radius:20px;padding:5px 12px;font-size:12px;color:rgba(255,255,255,.9);
-  display:flex;align-items:center;gap:5px;white-space:nowrap
-}
-.stat-chip strong{color:#ffd966;font-weight:700;font-variant-numeric:tabular-nums}
+.h-title h1{font-size:14px;font-weight:700;line-height:1.25;letter-spacing:.2px;text-transform:uppercase}
+.h-title p{font-size:11.5px;color:rgba(255,255,255,.78);margin-top:2px}
+.h-right{margin-left:auto;display:flex;gap:18px;align-items:center}
+.h-stat{display:flex;flex-direction:column;align-items:flex-end}
+.h-stat .lbl{font-size:10.5px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.5px}
+.h-stat .val{font:700 15px/1 'Segoe UI';color:#fff}
+.h-stat .val span{color:var(--accent);font-size:12px;font-weight:500}
 
-/* ===== MENU BAR ===== */
-.menu-bar{
-  background:#1d2d44;border-bottom:1px solid #364c63;
-  padding:0;display:flex;align-items:center;z-index:1400
+/* ============ MENU BAR ============ */
+.menu{
+  background:#0d3a11;color:#fff;padding:0;display:flex;align-items:center;
+  border-bottom:1px solid #1b5e20;z-index:1400;position:relative
 }
-.menu-bar button{
-  background:none;border:none;color:rgba(255,255,255,.75);
-  padding:9px 16px;font:500 12.5px 'Be Vietnam Pro',sans-serif;
-  cursor:pointer;border-bottom:2px solid transparent;
-  transition:all .15s
+.menu button{
+  background:none;border:none;color:rgba(255,255,255,.78);
+  padding:10px 18px;font:500 12.5px 'Segoe UI';cursor:pointer;
+  border-bottom:3px solid transparent;transition:all .15s;
+  display:inline-flex;align-items:center;gap:6px
 }
-.menu-bar button:hover{background:rgba(255,255,255,.05);color:#fff}
-.menu-bar button.active{color:#ffd966;border-bottom-color:#d4a017;background:rgba(212,160,23,.08)}
+.menu button:hover{background:rgba(255,255,255,.06);color:#fff}
+.menu button.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(212,160,23,.1);font-weight:600}
 
-/* ===== LAYOUT ===== */
-.app{display:flex;height:calc(100vh - 60px - 38px);position:relative}
+/* ============ APP ============ */
+.app{display:flex;height:calc(100vh - 64px - 41px);position:relative}
 
-/* ===== SIDEBAR ===== */
+/* ============ SIDEBAR ============ */
 .sidebar{
-  width:320px;background:#fafbfc;border-right:1px solid #d9dee3;
-  display:flex;flex-direction:column;overflow:hidden;transition:transform .25s
+  width:300px;background:var(--panel);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;transition:transform .25s;flex-shrink:0
 }
 .sidebar.hidden{transform:translateX(-100%);position:absolute;height:100%;z-index:900}
 
-.filter-section{padding:12px 14px;border-bottom:1px solid #e5e9ed}
-.filter-section h3{
-  font-size:11px;font-weight:700;color:#5a6c7d;text-transform:uppercase;
-  letter-spacing:.6px;margin-bottom:8px;display:flex;align-items:center;gap:6px
+.sb-section{padding:13px 14px;border-bottom:1px solid var(--border-lt)}
+.sb-section h3{
+  font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:7px
 }
-.filter-section h3::before{
-  content:'';width:3px;height:12px;background:#d4a017;border-radius:2px
+.sb-section h3::before{
+  content:'';width:3px;height:13px;background:var(--accent);border-radius:2px
 }
 
-.checkbox-list{display:flex;flex-direction:column;gap:5px}
-.cb-item{display:flex;align-items:center;gap:7px;padding:5px 7px;border-radius:5px;cursor:pointer;font-size:12.5px;color:#2c3e50;transition:background .12s}
-.cb-item:hover{background:#eef2f6}
-.cb-item input[type=checkbox]{accent-color:#1e4a6f;width:14px;height:14px}
-.cb-item .badge{margin-left:auto;font-size:11px;color:#7a8b9c;font-variant-numeric:tabular-nums;background:#e8edf2;padding:1px 7px;border-radius:10px}
-.cb-item .color-dot{width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
-
-.search-box{padding:10px 14px;border-bottom:1px solid #e5e9ed;background:#fff}
-.search-box input{
-  width:100%;padding:8px 11px;border:1px solid #d9dee3;border-radius:6px;
-  font:13px 'Be Vietnam Pro';outline:none;transition:border-color .15s
+.cb-list{display:flex;flex-direction:column;gap:4px}
+.cb-item{
+  display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;
+  cursor:pointer;font-size:12.5px;color:var(--text);transition:background .12s
 }
-.search-box input:focus{border-color:#1e4a6f;box-shadow:0 0 0 3px rgba(30,74,111,.1)}
+.cb-item:hover{background:#f0f5f0}
+.cb-item input[type=checkbox]{accent-color:var(--primary);width:14px;height:14px;cursor:pointer}
+.cb-item .dot{width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
+.cb-item .cnt{margin-left:auto;font-size:11px;color:var(--text-mute);background:var(--border-lt);padding:1px 8px;border-radius:10px;font-variant-numeric:tabular-nums}
 
-.results-list{flex:1;overflow-y:auto;padding:4px 0}
-.result-item{
-  padding:9px 14px;border-bottom:1px solid #eef0f3;cursor:pointer;
+.sb-loai{max-height:200px;overflow-y:auto;padding-right:4px}
+.sb-loai::-webkit-scrollbar{width:6px}
+.sb-loai::-webkit-scrollbar-thumb{background:#c8d4cb;border-radius:3px}
+
+.sb-search{padding:10px 14px;background:#f9fcfa;border-bottom:1px solid var(--border-lt)}
+.sb-search input{
+  width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:5px;
+  font:13px 'Segoe UI';outline:none;background:#fff;transition:border-color .15s
+}
+.sb-search input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(27,94,32,.1)}
+
+.sb-results{flex:1;overflow-y:auto}
+.sb-results::-webkit-scrollbar{width:6px}
+.sb-results::-webkit-scrollbar-thumb{background:#c8d4cb;border-radius:3px}
+.r-item{
+  padding:9px 14px;border-bottom:1px solid var(--border-lt);cursor:pointer;
   transition:background .12s;font-size:12.5px
 }
-.result-item:hover{background:#f0f4f8}
-.result-item.active{background:#fef7e0;border-left:3px solid #d4a017;padding-left:11px}
-.result-item .ri-title{font-weight:600;color:#1d2733;margin-bottom:2px}
-.result-item .ri-sub{font-size:11px;color:#7a8b9c;display:flex;justify-content:space-between}
-.result-empty{padding:20px;text-align:center;color:#9aa8b6;font-size:12.5px;font-style:italic}
+.r-item:hover{background:#f0f5f0}
+.r-item.active{background:#fef7e0;border-left:3px solid var(--accent);padding-left:11px}
+.r-item .rt{font-weight:600;color:var(--text);margin-bottom:2px}
+.r-item .rs{font-size:11px;color:var(--text-mid);display:flex;justify-content:space-between}
+.r-empty{padding:24px 14px;text-align:center;color:var(--text-mute);font-size:12.5px;font-style:italic}
 
-/* Toggle sidebar btn */
-.sidebar-toggle{
+.sb-toggle{
   position:absolute;top:50%;transform:translateY(-50%);
-  left:320px;width:22px;height:50px;background:#1d2d44;color:#fff;
-  border:none;border-radius:0 6px 6px 0;cursor:pointer;
-  z-index:800;display:flex;align-items:center;justify-content:center;
-  transition:left .25s;font-size:13px
+  left:300px;width:22px;height:48px;background:var(--primary-dk);color:#fff;
+  border:none;border-radius:0 6px 6px 0;cursor:pointer;z-index:800;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+  transition:left .25s;box-shadow:2px 0 6px rgba(0,0,0,.1)
 }
-.sidebar.hidden ~ .map-wrap .sidebar-toggle{left:0}
+.sidebar.hidden ~ .map-wrap .sb-toggle{left:0}
 
-/* ===== MAP ===== */
+/* ============ MAP ============ */
 .map-wrap{flex:1;position:relative;background:#dfe6ed}
 #map{height:100%;width:100%}
 
-/* Legend */
 .legend{
-  position:absolute;bottom:20px;left:14px;
-  background:rgba(255,255,255,.96);backdrop-filter:blur(6px);
-  border-radius:8px;padding:10px 12px;
-  box-shadow:0 3px 14px rgba(0,0,0,.18);
-  font-size:11.5px;z-index:600;max-width:240px
+  position:absolute;bottom:18px;left:14px;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(6px);
+  border-radius:7px;padding:10px 13px;box-shadow:var(--shadow-lg);
+  font-size:11.5px;z-index:600;max-width:230px;border:1px solid var(--border)
 }
-.legend h4{font-size:11px;font-weight:700;color:#1d2733;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
-.legend-row{display:flex;align-items:center;gap:7px;margin-bottom:3px}
-.legend-color{width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,.2);flex-shrink:0}
+.legend h4{font-size:10.5px;font-weight:700;color:var(--primary);margin-bottom:7px;text-transform:uppercase;letter-spacing:.4px}
+.l-row{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.l-col{width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,.2);flex-shrink:0}
 
-/* ===== DETAIL PANEL ===== */
-.detail-panel{
+.coord-display{
+  position:absolute;bottom:18px;right:18px;
+  background:rgba(255,255,255,.95);padding:6px 11px;border-radius:5px;
+  font:11.5px monospace;color:var(--text-mid);z-index:600;
+  border:1px solid var(--border);box-shadow:var(--shadow)
+}
+
+/* ============ DETAIL PANEL ============ */
+.detail{
   position:absolute;top:0;right:0;width:380px;height:100%;
-  background:#fff;border-left:1px solid #d9dee3;
-  box-shadow:-3px 0 18px rgba(0,0,0,.12);
-  z-index:1000;transform:translateX(100%);transition:transform .25s;
+  background:#fff;border-left:1px solid var(--border);
+  box-shadow:-3px 0 18px rgba(0,0,0,.12);z-index:1000;
+  transform:translateX(100%);transition:transform .25s;
   display:flex;flex-direction:column
 }
-.detail-panel.open{transform:translateX(0)}
-.detail-header{
-  background:linear-gradient(135deg,#0a2540,#1e4a6f);
-  color:#fff;padding:14px 16px;
-  display:flex;align-items:center;justify-content:space-between
+.detail.open{transform:translateX(0)}
+.d-head{
+  background:linear-gradient(135deg,var(--primary-dk),var(--primary));
+  color:#fff;padding:13px 16px;display:flex;justify-content:space-between;align-items:flex-start
 }
-.detail-header h2{font-size:15px;font-weight:700}
-.detail-header .subtitle{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px}
-.btn-close{
+.d-head h2{font-size:15px;font-weight:700}
+.d-head .d-sub{font-size:11.5px;color:rgba(255,255,255,.78);margin-top:2px}
+.btn-x{
   background:rgba(255,255,255,.12);border:none;color:#fff;
   width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:18px;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
   transition:background .15s
 }
-.btn-close:hover{background:rgba(255,255,255,.25)}
+.btn-x:hover{background:rgba(255,255,255,.25)}
 
-.detail-body{flex:1;overflow-y:auto;padding:0}
-.detail-section{padding:14px 16px;border-bottom:1px solid #eef0f3}
-.detail-section h3{
-  font-size:11px;font-weight:700;color:#1e4a6f;
+.tab-row{display:flex;background:#f0f5f0;border-bottom:1px solid var(--border)}
+.tab-btn{
+  flex:1;padding:9px 6px;background:none;border:none;cursor:pointer;
+  font:500 12px 'Segoe UI';color:var(--text-mid);
+  border-bottom:2px solid transparent
+}
+.tab-btn.active{color:var(--primary-dk);background:#fff;border-bottom-color:var(--accent);font-weight:600}
+
+.d-body{flex:1;overflow-y:auto}
+.d-body::-webkit-scrollbar{width:6px}
+.d-body::-webkit-scrollbar-thumb{background:#c8d4cb;border-radius:3px}
+.d-sec{padding:13px 16px;border-bottom:1px solid var(--border-lt)}
+.d-sec h3{
+  font-size:10.5px;font-weight:700;color:var(--primary);
   text-transform:uppercase;letter-spacing:.6px;margin-bottom:9px;
   display:flex;align-items:center;gap:6px
 }
-.detail-section h3::before{
-  content:'';width:3px;height:12px;background:#d4a017;border-radius:2px
+.d-sec h3::before{
+  content:'';width:3px;height:12px;background:var(--accent);border-radius:2px
 }
-.attr-grid{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:12.5px}
-.attr-grid dt{color:#7a8b9c;font-weight:500}
-.attr-grid dd{color:#1d2733;font-weight:600;word-break:break-word}
-.attr-grid dd.empty{color:#aab4be;font-weight:400;font-style:italic}
 
-.badge-pill{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600}
-.badge-da-bg{background:#e3f2fd;color:#0d47a1}
-.badge-tt-bg{background:#fff3e0;color:#e65100}
-.badge-giulai{background:#f3e5f5;color:#6a1b9a}
-.badge-rs{background:#ffebee;color:#b71c1c}
+.attr{display:grid;grid-template-columns:120px 1fr;gap:6px 10px;font-size:12.5px}
+.attr dt{color:var(--text-mid);font-weight:500}
+.attr dd{color:var(--text);font-weight:600;word-break:break-word}
+.attr dd.muted{color:var(--text-mute);font-weight:400;font-style:italic}
 
-.detail-action{padding:12px 16px;background:#fafbfc;border-top:1px solid #e5e9ed;display:flex;gap:8px}
+.pill{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600}
+.pill-da{background:#e3f2fd;color:#0d47a1}
+.pill-tt{background:#fff3e0;color:#bf360c}
+.pill-giu{background:#f3e5f5;color:#4a148c}
+.pill-rs{background:#ffebee;color:#b71c1c}
+
+.note{
+  background:#fff8e1;border-left:3px solid var(--accent);padding:8px 11px;
+  font-size:11.5px;color:#5d4a0d;border-radius:0 5px 5px 0;line-height:1.5;margin-top:8px
+}
+.note.warn{background:#ffebee;border-left-color:#c62828;color:#5d0d0d}
+
+.d-action{padding:12px 16px;background:#fafbfa;border-top:1px solid var(--border);display:flex;gap:8px}
 .btn{
-  flex:1;padding:8px 12px;border:none;border-radius:6px;cursor:pointer;
-  font:600 12px 'Be Vietnam Pro';transition:all .15s
+  flex:1;padding:8px 12px;border:none;border-radius:5px;cursor:pointer;
+  font:600 12px 'Segoe UI';transition:all .15s
 }
-.btn-primary{background:#1e4a6f;color:#fff}
-.btn-primary:hover{background:#163a59}
-.btn-secondary{background:#fff;color:#1e4a6f;border:1px solid #d9dee3}
-.btn-secondary:hover{background:#f0f4f8}
+.btn-pri{background:var(--primary);color:#fff}
+.btn-pri:hover{background:var(--primary-dk)}
+.btn-sec{background:#fff;color:var(--primary);border:1px solid var(--border)}
+.btn-sec:hover{background:var(--border-lt)}
 
-/* Tabs in detail */
-.tab-row{display:flex;background:#f0f4f8;border-bottom:1px solid #e5e9ed}
-.tab-btn{
-  flex:1;padding:9px 8px;background:none;border:none;cursor:pointer;
-  font:500 12px 'Be Vietnam Pro';color:#5a6c7d;border-bottom:2px solid transparent
-}
-.tab-btn.active{color:#0a2540;background:#fff;border-bottom-color:#d4a017;font-weight:600}
-
-/* Editable fields */
-.edit-grid{display:grid;grid-template-columns:1fr;gap:9px}
-.edit-row label{display:block;font-size:11px;color:#5a6c7d;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.edit-grp{display:flex;flex-direction:column;gap:10px}
+.edit-row label{display:block;font-size:10.5px;color:var(--text-mid);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
 .edit-row select,.edit-row input,.edit-row textarea{
-  width:100%;padding:6px 9px;border:1px solid #d9dee3;border-radius:5px;
-  font:13px 'Be Vietnam Pro';outline:none;background:#fff
+  width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:5px;
+  font:13px 'Segoe UI';outline:none;background:#fff
 }
-.edit-row textarea{resize:vertical;min-height:50px}
+.edit-row textarea{resize:vertical;min-height:55px;font-family:inherit}
 .edit-row select:focus,.edit-row input:focus,.edit-row textarea:focus{
-  border-color:#1e4a6f;box-shadow:0 0 0 3px rgba(30,74,111,.1)
-}
-.note-info{
-  background:#fef7e0;border-left:3px solid #d4a017;padding:8px 11px;
-  font-size:11.5px;color:#5d4a0d;border-radius:0 5px 5px 0;line-height:1.45;margin-top:6px
+  border-color:var(--primary);box-shadow:0 0 0 3px rgba(27,94,32,.1)
 }
 
-/* ===== STATS MODAL ===== */
-.modal-backdrop{
-  position:fixed;inset:0;background:rgba(13,27,42,.65);backdrop-filter:blur(3px);
+/* ============ MODAL ============ */
+.bd{
+  position:fixed;inset:0;background:rgba(13,58,17,.55);backdrop-filter:blur(3px);
   display:none;align-items:center;justify-content:center;z-index:2000;padding:20px
 }
-.modal-backdrop.open{display:flex}
+.bd.open{display:flex}
 .modal{
-  background:#fff;border-radius:10px;max-width:780px;width:100%;
+  background:#fff;border-radius:10px;max-width:820px;width:100%;
   max-height:88vh;overflow:hidden;display:flex;flex-direction:column;
-  box-shadow:0 8px 30px rgba(0,0,0,.3)
+  box-shadow:0 10px 40px rgba(0,0,0,.3)
 }
-.modal-head{
-  padding:14px 20px;background:linear-gradient(135deg,#0a2540,#1e4a6f);
+.m-head{
+  padding:14px 20px;background:linear-gradient(135deg,var(--primary-dk),var(--primary));
   color:#fff;display:flex;justify-content:space-between;align-items:center
 }
-.modal-head h2{font-size:16px;font-weight:700}
-.modal-body{flex:1;overflow-y:auto;padding:18px 20px}
+.m-head h2{font-size:16px;font-weight:700}
+.m-body{flex:1;overflow-y:auto;padding:18px 22px}
 
-.stat-card{background:#fafbfc;border:1px solid #e5e9ed;border-radius:8px;padding:14px;margin-bottom:14px}
-.stat-card h4{font-size:13px;color:#1d2733;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:7px}
-.stat-card h4 .pill{font-size:10.5px;font-weight:600;background:#d4a017;color:#0a2540;padding:1px 7px;border-radius:9px}
-.stat-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #e5e9ed;font-size:12.5px}
-.stat-row:last-child{border:none;font-weight:700;color:#0a2540}
-.stat-row span:last-child{font-variant-numeric:tabular-nums}
+.stat-card{background:#fafbfa;border:1px solid var(--border-lt);border-radius:7px;padding:13px 15px;margin-bottom:13px}
+.stat-card h4{font-size:13px;color:var(--text);font-weight:700;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.stat-card h4 .tag{font-size:10px;font-weight:600;background:var(--accent);color:var(--primary-dk);padding:1px 7px;border-radius:9px;text-transform:uppercase;letter-spacing:.3px}
+.stat-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border-lt);font-size:12.5px;align-items:center;gap:8px}
+.stat-row:last-child{border:none;font-weight:700;color:var(--primary-dk)}
+.stat-row span:last-child{font-variant-numeric:tabular-nums;text-align:right;flex-shrink:0}
 
-/* ===== HELP MODAL ===== */
-.help-text{font-size:13px;line-height:1.65;color:#1d2733}
-.help-text h4{margin:14px 0 6px;color:#0a2540;font-size:13.5px}
-.help-text p{margin-bottom:6px}
-.help-text ul{margin-left:18px;margin-bottom:8px}
-.help-text li{margin-bottom:3px}
-.help-text code{background:#eef2f6;padding:1px 5px;border-radius:3px;font-size:12px;color:#0a2540}
-
-/* Search/lookup modal */
-.lookup-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.lookup-form label{font-size:11px;color:#5a6c7d;font-weight:600;text-transform:uppercase;display:block;margin-bottom:3px}
-.lookup-form input,.lookup-form select{
-  width:100%;padding:7px 10px;border:1px solid #d9dee3;border-radius:5px;font:13px 'Be Vietnam Pro';outline:none
+.lk-form{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}
+.lk-form label{font-size:10.5px;color:var(--text-mid);font-weight:700;text-transform:uppercase;display:block;margin-bottom:3px;letter-spacing:.3px}
+.lk-form input,.lk-form select{
+  width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:5px;
+  font:13px 'Segoe UI';outline:none
 }
-.lookup-results{max-height:380px;overflow-y:auto;border:1px solid #e5e9ed;border-radius:6px}
-.lookup-results table{width:100%;border-collapse:collapse;font-size:12px}
-.lookup-results th{background:#1e4a6f;color:#fff;padding:7px 9px;text-align:left;position:sticky;top:0;font-weight:600;font-size:11.5px}
-.lookup-results td{padding:6px 9px;border-bottom:1px solid #eef0f3}
-.lookup-results tr:hover{background:#fef7e0;cursor:pointer}
+.lk-form input:focus,.lk-form select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(27,94,32,.1)}
+.lk-res{max-height:380px;overflow-y:auto;border:1px solid var(--border);border-radius:6px}
+.lk-res::-webkit-scrollbar{width:6px}
+.lk-res::-webkit-scrollbar-thumb{background:#c8d4cb;border-radius:3px}
+.lk-res table{width:100%;border-collapse:collapse;font-size:12px}
+.lk-res th{background:var(--primary);color:#fff;padding:7px 9px;text-align:left;position:sticky;top:0;font-weight:600;font-size:11.5px}
+.lk-res td{padding:6px 9px;border-bottom:1px solid var(--border-lt)}
+.lk-res tr:hover{background:#fef7e0;cursor:pointer}
 
-/* ===== LOADING ===== */
+.help h4{margin:14px 0 6px;color:var(--primary-dk);font-size:13.5px;font-weight:700}
+.help p{margin-bottom:6px;line-height:1.65;font-size:13px}
+.help ul{margin-left:18px;margin-bottom:8px}
+.help li{margin-bottom:4px;line-height:1.55}
+.help code{background:var(--border-lt);padding:1px 5px;border-radius:3px;font-size:12px;color:var(--primary-dk)}
+
+.footer-thanha{
+  background:#fafbfa;border-top:1px solid var(--border);
+  padding:14px 18px;display:flex;align-items:center;gap:14px;margin-top:16px;border-radius:8px
+}
+.footer-thanha .logo-th{
+  width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#43a047,#1b5e20);
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  font:700 13px Georgia,serif;letter-spacing:.5px;flex-shrink:0;box-shadow:0 0 0 3px rgba(212,160,23,.3)
+}
+.footer-thanha .ft{font-size:12.5px;line-height:1.6;color:var(--text-mid)}
+.footer-thanha .ft b{color:var(--primary-dk)}
+
+/* ============ LOADING ============ */
 .loading{
-  position:absolute;inset:0;background:rgba(255,255,255,.92);
+  position:absolute;inset:0;background:rgba(245,247,244,.96);
   display:flex;align-items:center;justify-content:center;flex-direction:column;
   z-index:1500;gap:14px
 }
 .spinner{
-  width:38px;height:38px;border:4px solid #e5e9ed;border-top-color:#d4a017;
+  width:42px;height:42px;border:4px solid var(--border);border-top-color:var(--accent);
   border-radius:50%;animation:spin .8s linear infinite
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-size:13px;color:#5a6c7d;font-weight:500}
+.loading-text{font-size:13px;color:var(--text-mid);font-weight:500}
 
-@media (max-width:768px){
+/* ============ TOAST ============ */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);
+  background:var(--primary-dk);color:#fff;padding:11px 20px;border-radius:24px;
+  font-size:13px;font-weight:500;z-index:9999;transition:transform .3s;
+  box-shadow:0 5px 20px rgba(0,0,0,.3);white-space:nowrap
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{background:#2e7d32}
+.toast.err{background:#c62828}
+
+@media(max-width:768px){
   .sidebar{width:280px}
-  .detail-panel{width:100%}
-  .header-right{display:none}
-  .legend{font-size:10.5px;max-width:200px}
+  .detail{width:100%}
+  .h-right{display:none}
+  .sb-toggle{left:280px}
+  .lk-form{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -270,20 +327,20 @@ html,body{height:100%;overflow:hidden;font-family:'Be Vietnam Pro',sans-serif;co
 
 <!-- HEADER -->
 <div class="header">
-  <div class="logo">LP</div>
-  <div class="title">
-    <h1>RÀ SOÁT ĐẤT CÔNG TY CP CHÈ LONG PHÚ</h1>
-    <p>Hệ thống WebGIS phục vụ bàn giao và lập phương án sử dụng đất - 2026</p>
+  <div class="h-logo">LP</div>
+  <div class="h-title">
+    <h1>ỦY BAN NHÂN DÂN XÃ PHÚ CÁT</h1>
+    <p>Hệ thống rà soát đất Công ty CP Chè Long Phú • Phục vụ bàn giao và lập phương án theo Điều 181 Luật ĐĐ 2024</p>
   </div>
-  <div class="header-right">
-    <div class="stat-chip">Thửa: <strong id="stat-total">—</strong></div>
-    <div class="stat-chip">Hiển thị: <strong id="stat-visible">—</strong></div>
-    <div class="stat-chip">Tổng DT: <strong id="stat-area">—</strong> ha</div>
+  <div class="h-right">
+    <div class="h-stat"><span class="lbl">Tổng thửa</span><span class="val" id="s-total">—</span></div>
+    <div class="h-stat"><span class="lbl">Hiển thị</span><span class="val" id="s-vis">—</span></div>
+    <div class="h-stat"><span class="lbl">Tổng DT</span><span class="val"><span id="s-area">—</span> <span>ha</span></span></div>
   </div>
 </div>
 
-<!-- MENU BAR -->
-<div class="menu-bar">
+<!-- MENU -->
+<div class="menu">
   <button class="active" data-menu="map">🗺️ Bản đồ</button>
   <button data-menu="lookup">🔍 Tra cứu</button>
   <button data-menu="stats">📊 Thống kê</button>
@@ -295,195 +352,174 @@ html,body{height:100%;overflow:hidden;font-family:'Be Vietnam Pro',sans-serif;co
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-
-    <div class="filter-section">
+    <div class="sb-section">
       <h3>Đề xuất xử lý</h3>
-      <div class="checkbox-list" id="filter-dexuat"></div>
+      <div class="cb-list" id="f-dx"></div>
     </div>
-
-    <div class="filter-section">
+    <div class="sb-section">
       <h3>Phân theo xã cũ</h3>
-      <div class="checkbox-list" id="filter-xa"></div>
+      <div class="cb-list" id="f-xa"></div>
     </div>
-
-    <div class="filter-section">
+    <div class="sb-section">
       <h3>Loại đất</h3>
-      <div class="checkbox-list" id="filter-loai" style="max-height:220px;overflow-y:auto"></div>
+      <div class="cb-list sb-loai" id="f-loai"></div>
     </div>
-
-    <div class="search-box">
-      <input type="text" id="quick-search" placeholder="🔍 Tìm tên chủ / số thửa...">
+    <div class="sb-search">
+      <input type="text" id="q-search" placeholder="🔍 Tìm tên chủ / số thửa...">
     </div>
-
-    <div class="results-list" id="results-list"></div>
-
+    <div class="sb-results" id="r-list"></div>
   </aside>
 
-  <button class="sidebar-toggle" id="sidebar-toggle" title="Ẩn/hiện danh sách">‹</button>
+  <button class="sb-toggle" id="sb-toggle" title="Ẩn/hiện danh sách">‹</button>
 
   <!-- MAP -->
   <div class="map-wrap">
     <div id="map"></div>
 
-    <!-- Legend -->
     <div class="legend">
       <h4>Đề xuất xử lý</h4>
-      <div class="legend-row"><div class="legend-color" style="background:#3498db"></div>Đã bàn giao 2018</div>
-      <div class="legend-row"><div class="legend-color" style="background:#e67e22"></div>Tiếp tục bàn giao về địa phương</div>
-      <div class="legend-row"><div class="legend-color" style="background:#9b59b6"></div>Giữ lại theo phương án CPH</div>
-      <div class="legend-row"><div class="legend-color" style="background:#e74c3c"></div>Cần rà soát thêm</div>
+      <div class="l-row"><div class="l-col" style="background:#1565c0"></div>Đã bàn giao 2018</div>
+      <div class="l-row"><div class="l-col" style="background:#ef6c00"></div>Tiếp tục bàn giao về địa phương</div>
+      <div class="l-row"><div class="l-col" style="background:#7b1fa2"></div>Giữ lại theo PA CPH</div>
+      <div class="l-row"><div class="l-col" style="background:#c62828"></div>Cần rà soát thêm</div>
     </div>
 
-    <!-- Loading -->
+    <div class="coord-display" id="coord-display">Di chuyển chuột để xem tọa độ</div>
+
     <div class="loading" id="loading">
       <div class="spinner"></div>
-      <div class="loading-text">Đang tải dữ liệu địa chính...</div>
+      <div class="loading-text">Đang tải 4.323 thửa đất...</div>
     </div>
-
   </div>
 
   <!-- DETAIL PANEL -->
-  <aside class="detail-panel" id="detail-panel">
-    <div class="detail-header">
+  <aside class="detail" id="detail">
+    <div class="d-head">
       <div>
-        <h2 id="dp-title">Chi tiết thửa đất</h2>
-        <div class="subtitle" id="dp-subtitle">—</div>
+        <h2 id="d-title">Chi tiết thửa đất</h2>
+        <div class="d-sub" id="d-subtitle">—</div>
       </div>
-      <button class="btn-close" id="btn-close-detail">×</button>
+      <button class="btn-x" id="btn-close-d">×</button>
     </div>
-
     <div class="tab-row">
       <button class="tab-btn active" data-tab="info">Thông tin</button>
       <button class="tab-btn" data-tab="legal">Pháp lý</button>
       <button class="tab-btn" data-tab="build">Công trình</button>
-      <button class="tab-btn" data-tab="files">Hồ sơ/Ảnh</button>
+      <button class="tab-btn" data-tab="files">Liên lạc/Ảnh</button>
     </div>
-
-    <div class="detail-body" id="dp-body">
-      <!-- Tab nội dung sẽ được render qua JS -->
-    </div>
-
-    <div class="detail-action">
-      <button class="btn btn-primary" id="btn-save">💾 Lưu cập nhật</button>
-      <button class="btn btn-secondary" id="btn-zoom">🎯 Phóng to</button>
+    <div class="d-body" id="d-body"></div>
+    <div class="d-action">
+      <button class="btn btn-pri" id="btn-save">💾 Lưu</button>
+      <button class="btn btn-sec" id="btn-zoom">🎯 Phóng to</button>
     </div>
   </aside>
 </div>
 
-<!-- MODAL: Tra cứu nâng cao -->
-<div class="modal-backdrop" id="modal-lookup">
+<!-- MODAL: LOOKUP -->
+<div class="bd" id="m-lookup">
   <div class="modal">
-    <div class="modal-head">
-      <h2>🔍 Tra cứu nâng cao</h2>
-      <button class="btn-close" data-close="modal-lookup">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="lookup-form">
+    <div class="m-head"><h2>🔍 Tra cứu nâng cao</h2><button class="btn-x" data-close="m-lookup">×</button></div>
+    <div class="m-body">
+      <div class="lk-form">
         <div><label>Tờ bản đồ</label><input type="number" id="lk-tbd" placeholder="1-41"></div>
         <div><label>Số thửa</label><input type="number" id="lk-thua" placeholder="VD: 123"></div>
         <div><label>Tên chủ sử dụng</label><input type="text" id="lk-ten" placeholder="VD: Nguyễn Văn..."></div>
-        <div><label>Xã cũ</label>
-          <select id="lk-xa"><option value="">— Tất cả —</option><option>Phú Cát</option><option>Hòa Thạch</option><option>Đông Yên</option></select>
-        </div>
+        <div><label>Xã cũ</label><select id="lk-xa"><option value="">— Tất cả —</option><option>Phú Cát</option><option>Hòa Thạch</option><option>Đông Yên</option></select></div>
         <div><label>Diện tích từ (m²)</label><input type="number" id="lk-dtmin" placeholder="0"></div>
         <div><label>Diện tích đến (m²)</label><input type="number" id="lk-dtmax" placeholder="VD: 1000"></div>
       </div>
-      <button class="btn btn-primary" id="btn-do-lookup" style="margin-bottom:12px">Tra cứu</button>
-      <div class="lookup-results" id="lookup-results"></div>
+      <button class="btn btn-pri" id="btn-lk-go" style="margin-bottom:12px;flex:initial;padding:9px 22px">Tra cứu</button>
+      <button class="btn btn-sec" id="btn-lk-csv" style="margin-bottom:12px;flex:initial;padding:9px 22px;margin-left:6px">⬇ Xuất CSV</button>
+      <div class="lk-res" id="lk-res"></div>
     </div>
   </div>
 </div>
 
-<!-- MODAL: Thống kê -->
-<div class="modal-backdrop" id="modal-stats">
+<!-- MODAL: STATS -->
+<div class="bd" id="m-stats">
   <div class="modal">
-    <div class="modal-head">
-      <h2>📊 Thống kê tổng hợp</h2>
-      <button class="btn-close" data-close="modal-stats">×</button>
-    </div>
-    <div class="modal-body" id="stats-body"></div>
+    <div class="m-head"><h2>📊 Thống kê tổng hợp</h2><button class="btn-x" data-close="m-stats">×</button></div>
+    <div class="m-body" id="m-stats-body"></div>
   </div>
 </div>
 
-<!-- MODAL: Hướng dẫn -->
-<div class="modal-backdrop" id="modal-help">
+<!-- MODAL: HELP -->
+<div class="bd" id="m-help">
   <div class="modal">
-    <div class="modal-head">
-      <h2>📘 Hướng dẫn sử dụng</h2>
-      <button class="btn-close" data-close="modal-help">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="help-text">
-        <h4>1. Mục đích của hệ thống</h4>
-        <p>Hệ thống WebGIS này phục vụ công tác rà soát toàn diện đất có nguồn gốc từ Công ty CP Chè Long Phú trên địa bàn 03 xã cũ: Đông Yên, Hòa Thạch, Phú Cát (nay là xã Phú Cát mới, Hà Nội), trên cơ sở bộ bản đồ địa chính 41 tờ đo năm 2016 (tổng 4.323 thửa, khoảng 490 ha).</p>
+    <div class="m-head"><h2>📘 Hướng dẫn sử dụng</h2><button class="btn-x" data-close="m-help">×</button></div>
+    <div class="m-body">
+      <div class="help">
+        <h4>1. Mục đích hệ thống</h4>
+        <p>Hệ thống WebGIS hỗ trợ rà soát toàn diện <b>4.323 thửa đất</b> (tổng khoảng <b>490 ha</b>) có nguồn gốc từ Công ty CP Chè Long Phú trên địa bàn 3 xã cũ: Đông Yên, Hòa Thạch, Phú Cát (nay là xã Phú Cát mới, Hà Nội), phục vụ lập phương án bàn giao và sử dụng đất theo Điều 181 Luật Đất đai 2024.</p>
+        <p>Hệ thống kế thừa kết quả đo đạc bản đồ địa chính năm 2016 và biểu rà soát hiện trạng năm 2019 (theo Báo cáo 500/BC-UBND ngày 19/8/2019 của UBND huyện Quốc Oai).</p>
 
-        <h4>2. Nguồn dữ liệu</h4>
+        <h4>2. Bốn nhóm đề xuất xử lý</h4>
         <ul>
-          <li><strong>Bản đồ địa chính:</strong> 41 tờ đo đạc năm 2016 (Sở TN&MT - Công ty Bình Minh), đã chuyển sang VN-2000 → WGS-84.</li>
-          <li><strong>Biểu 2 (Sổ mục kê):</strong> Toàn bộ 4.323 thửa với tên chủ, diện tích, loại đất.</li>
-          <li><strong>Biểu 3 (Rà soát 2019):</strong> 2.624 thửa Cty đã bàn giao về địa phương (theo BC 500/BC-UBND 19/8/2019).</li>
+          <li><b style="color:#1565c0">Đã bàn giao 2018</b> — Các thửa đã bàn giao về UBND xã theo 03 biên bản tháng 5–6/2018.</li>
+          <li><b style="color:#ef6c00">Tiếp tục bàn giao về địa phương</b> — Các thửa còn lại trừ đất TSC và TMD.</li>
+          <li><b style="color:#7b1fa2">Giữ lại theo phương án CPH</b> — Đất TSC (trụ sở) và TMD (thương mại dịch vụ).</li>
+          <li><b style="color:#c62828">Cần rà soát thêm</b> — Thửa chưa xác định được loại đất hoặc chủ sử dụng.</li>
         </ul>
 
-        <h4>3. Bốn nhóm đề xuất xử lý</h4>
+        <h4>3. Sử dụng hệ thống</h4>
         <ul>
-          <li><strong style="color:#0d47a1">Đã bàn giao 2018:</strong> Các thửa đã được bàn giao về UBND xã theo 03 biên bản tháng 5-6/2018.</li>
-          <li><strong style="color:#e65100">Tiếp tục bàn giao về địa phương:</strong> Các thửa còn lại trừ đất TSC và TMD.</li>
-          <li><strong style="color:#6a1b9a">Giữ lại theo phương án CPH:</strong> Đất trụ sở cơ quan (TSC), đất thương mại dịch vụ (TMD).</li>
-          <li><strong style="color:#b71c1c">Cần rà soát thêm:</strong> Thửa chưa xác định được loại đất hoặc chủ sử dụng.</li>
+          <li><b>Bản đồ:</b> Click vào thửa để xem chi tiết. Dùng các bộ lọc bên trái để xem theo nhóm.</li>
+          <li><b>Tra cứu:</b> Tìm kiếm thửa theo nhiều tiêu chí, xuất kết quả CSV.</li>
+          <li><b>Thống kê:</b> Xem tổng quan, phân bổ theo xã/loại đất/thời gian khoán.</li>
+          <li><b>Sửa thông tin:</b> Mở chi tiết thửa → các tab Pháp lý/Công trình/Liên lạc-Ảnh. Thay đổi lưu trong trình duyệt (<code>localStorage</code>) và xuất ra file JSON để admin gộp.</li>
         </ul>
 
-        <h4>4. Thao tác cơ bản</h4>
+        <h4>4. Căn cứ pháp lý</h4>
         <ul>
-          <li>Bật/tắt nhóm bằng các checkbox bên trái</li>
-          <li>Tìm nhanh tại ô tìm kiếm trong sidebar</li>
-          <li>Click thửa trên bản đồ hoặc trong danh sách → xem chi tiết bên phải</li>
-          <li>Sử dụng tab "Pháp lý" để cập nhật quan hệ pháp lý, trạng thái kê khai</li>
-          <li>Tab "Công trình" để ghi nhận công trình xây dựng</li>
-          <li>Tab "Hồ sơ/Ảnh" để đính kèm hình ảnh, giấy tờ, thông tin liên lạc</li>
-        </ul>
-
-        <h4>5. Căn cứ pháp lý</h4>
-        <ul>
-          <li>Luật Đất đai 2024 - Điều 82, Điều 181</li>
-          <li>Nghị định 102/2024/NĐ-CP - Điều 33, 35, 67-69</li>
+          <li>Luật Đất đai 2024 — Điều 82, Điều 181</li>
+          <li>Nghị định 102/2024/NĐ-CP — Điều 33, 35, 67–69</li>
+          <li>Nghị định 151/2025/NĐ-CP, Nghị định 49/2026/NĐ-CP</li>
           <li>Quyết định 33/2026/QĐ-UBND Hà Nội về phân cấp</li>
-          <li>Kết luận thanh tra số 170/KLTT-STNMT-ĐTTr ngày 08/01/2025</li>
+          <li>Kết luận thanh tra 170/KLTT-STNMT-ĐTTr ngày 08/01/2025</li>
           <li>Báo cáo 500/BC-UBND ngày 19/8/2019 của UBND huyện Quốc Oai</li>
         </ul>
 
-        <h4>6. Lưu ý kỹ thuật</h4>
+        <h4>5. Lưu ý về phiên bản tĩnh</h4>
+        <p>Phiên bản này chạy trên GitHub Pages, không có máy chủ và CSDL tập trung. Mọi thay đổi của cán bộ rà soát được lưu cục bộ trong trình duyệt và phải xuất ra file JSON để gộp về. Phiên bản đầy đủ (có hộ dân tự kê khai online, đồng bộ giữa các cán bộ, kho ảnh thực địa) yêu cầu hạ tầng máy chủ.</p>
+
+        <h4>6. Vấn đề pháp lý còn để ngỏ</h4>
         <p>Thông tư 07/2015/TT-BTNMT đã bị bãi bỏ bởi Thông tư 20/2024 từ 01/01/2025, hiện chưa có thông tư mới thay thế. Hệ thống chỉ phục vụ rà soát nội bộ; các phương án phải tuân thủ pháp luật hiện hành tại thời điểm trình duyệt.</p>
-        
-        <p style="margin-top:14px;padding:10px;background:#eef2f6;border-radius:6px;font-size:12px;color:#5a6c7d">
-          <strong>Đơn vị xây dựng:</strong> Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà<br>
-          <strong>Liên hệ:</strong> Ông Phạm Văn Tuấn - 0911558628
-        </p>
+
+        <div class="footer-thanha">
+          <div class="logo-th">TH</div>
+          <div class="ft">
+            <b>Đơn vị xây dựng:</b> Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà<br>
+            <b>Liên hệ:</b> Mr Tuấn — 0911 558 628
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 // ===== CONFIG =====
 const COLORS = {
-  da_bangiao_2018: '#3498db',
-  tieptuc_bangiao: '#e67e22',
-  giulai_cph: '#9b59b6',
-  rasoat_them: '#e74c3c'
+  da_bangiao_2018:'#1565c0',
+  tieptuc_bangiao:'#ef6c00',
+  giulai_cph:'#7b1fa2',
+  rasoat_them:'#c62828'
 };
-const DE_XUAT_LABEL = {
-  da_bangiao_2018: 'Đã bàn giao 2018',
-  tieptuc_bangiao: 'Tiếp tục bàn giao về địa phương',
-  giulai_cph: 'Giữ lại theo phương án CPH',
-  rasoat_them: 'Cần rà soát thêm'
+const DX_LBL = {
+  da_bangiao_2018:'Đã bàn giao 2018',
+  tieptuc_bangiao:'Tiếp tục bàn giao về địa phương',
+  giulai_cph:'Giữ lại theo PA CPH',
+  rasoat_them:'Cần rà soát thêm'
 };
-const DE_XUAT_BADGE = {
-  da_bangiao_2018: 'badge-da-bg',
-  tieptuc_bangiao: 'badge-tt-bg',
-  giulai_cph: 'badge-giulai',
-  rasoat_them: 'badge-rs'
+const DX_PILL = {
+  da_bangiao_2018:'pill-da',
+  tieptuc_bangiao:'pill-tt',
+  giulai_cph:'pill-giu',
+  rasoat_them:'pill-rs'
 };
-const LOAI_DAT_NAMES = {
+const LD = {
   'ONT':'Đất ở nông thôn','CLN':'Đất trồng cây lâu năm','ONT+CLN':'Đất ở + cây lâu năm',
   'DGT':'Đất giao thông','DTL':'Đất thủy lợi','TMD':'Đất thương mại dịch vụ',
   'RSX':'Đất rừng sản xuất','NTS':'Đất nuôi trồng thủy sản','DNL':'Đất năng lượng',
@@ -492,76 +528,68 @@ const LOAI_DAT_NAMES = {
   'DCH':'Đất chợ','SKC':'Đất sản xuất kinh doanh','DBV':'Đất bưu chính viễn thông',
   'SKX':'Đất sản xuất VLXD','HNK':'Đất bằng hàng năm khác'
 };
+const PHAP_LY = ['Chưa xác định','Sử dụng đúng mục đích','Không sử dụng','Sử dụng không đúng mục đích','Cho thuê, mượn, liên doanh, liên kết, hợp tác đầu tư','Giao khoán theo NĐ 01/CP, 135/CP, khoán khác','Khoán trắng','Bị lấn, bị chiếm','Đang có tranh chấp'];
+const KE_KHAI = ['Chưa kê khai','Đã kê khai - không có biến động','Đã kê khai - có biến động'];
+const CT_LOAI = ['— Chọn —','Nhà ở cấp 4','Nhà ở 1 tầng','Nhà ở 2 tầng trở lên','Nhà cấp 3 (kiên cố)','Nhà tạm','Chuồng trại','Nhà xưởng','Công trình phụ trợ','Khác'];
 
-const PHAP_LY_OPTIONS = [
-  'Chưa xác định','Sử dụng đúng mục đích','Không sử dụng','Sử dụng không đúng mục đích',
-  'Cho thuê, mượn, liên doanh, liên kết, hợp tác đầu tư','Giao khoán theo NĐ 01/CP, 135/CP, khoán khác',
-  'Khoán trắng','Bị lấn, bị chiếm','Đang có tranh chấp'
-];
-const KE_KHAI_OPTIONS = ['Chưa kê khai','Đã kê khai - không có biến động','Đã kê khai - có biến động'];
+const LS_KEY = 'rasoat_chelongphu_v1';
 
 // ===== STATE =====
-let allData = null;
-let geoLayer = null;
-let map = null;
-let selectedId = null;
-let filtered = [];
-// Local edits stored in memory (would persist via API/server in production)
-const userEdits = {}; // id -> {phap_ly, ke_khai, ct_dt, ct_nam, ct_loai, ghi_chu, lien_lac}
+let allData=null, geoLayer=null, map=null, selectedId=null, filtered=[], currentTab='info';
+let userEdits = {};
+try{ userEdits = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); }catch(e){ userEdits={}; }
 
 // ===== MAP INIT =====
 function initMap(){
-  map = L.map('map', {preferCanvas:true, zoomControl:true}).setView([20.954,105.553],14);
-
-  // Base layers
-  const sat = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
-    maxZoom:21, subdomains:['mt0','mt1','mt2','mt3'],
-    attribution:'© Google Maps'
-  });
-  const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    maxZoom:19, attribution:'© OpenStreetMap'
-  });
+  map = L.map('map',{preferCanvas:true}).setView([20.952,105.553],14);
+  const sat = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{maxZoom:21,subdomains:['mt0','mt1','mt2','mt3'],attribution:'© Google'});
+  const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+  const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenTopoMap',subdomains:'abc'});
   sat.addTo(map);
-  L.control.layers({'Vệ tinh':sat,'Đường phố':street}, null, {position:'topright'}).addTo(map);
+  L.control.layers({'Vệ tinh':sat,'Đường phố':street,'Địa hình':topo},null,{position:'topright'}).addTo(map);
+  // Coord display
+  map.on('mousemove', e=>{
+    document.getElementById('coord-display').textContent = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+  });
 }
 
-// ===== STYLE =====
-function getStyle(p){
-  const color = COLORS[p.de_xuat] || '#95a5a6';
-  // ONT (đất ở) - đậm hơn để dễ phân biệt nhà ở
-  let fillOpacity = 0.55;
-  if(p.loai === 'ONT' || p.loai === 'ONT+CLN') fillOpacity = 0.65;
-  else if(p.loai === 'CLN') fillOpacity = 0.4;
-  return {
-    fillColor: color,
-    color: '#1d2733',
-    weight: 0.5,
-    fillOpacity,
-    opacity: 0.8
-  };
+function styleFor(p){
+  const c = COLORS[p.de_xuat] || '#95a5a6';
+  let fo = 0.5;
+  if(p.loai==='ONT'||p.loai==='ONT+CLN') fo=0.65;
+  else if(p.loai==='CLN') fo=0.38;
+  return {fillColor:c,color:'#222',weight:0.4,fillOpacity:fo,opacity:0.75};
 }
-function getHighlightStyle(){
-  return {weight:3,color:'#ffd966',fillOpacity:0.85}
-}
+const HL_STYLE = {weight:3,color:'#ffd966',fillOpacity:0.85,opacity:1};
 
-// ===== LOAD DATA =====
+// ===== LOAD =====
 async function loadData(){
-  try{
-    const res = await fetch('data/diachinh.geojson');
-    if(!res.ok) throw new Error('Không tải được file dữ liệu');
-    allData = await res.json();
-    renderAll();
-    document.getElementById('loading').style.display='none';
-  }catch(e){
-    document.getElementById('loading').innerHTML = `<div style="color:#b71c1c;text-align:center;padding:20px">
-      <strong>Lỗi tải dữ liệu</strong><br>
-      <small style="display:block;margin-top:6px">${e.message}</small>
-      <small style="display:block;margin-top:6px;color:#7a8b9c">Đảm bảo file <code>data/diachinh.geojson</code> nằm cùng thư mục với index.html</small>
-    </div>`;
+  // Thử tải từ cùng folder trước, fallback sang data/
+  let res, url;
+  for(const u of ['diachinh.geojson','data/diachinh.geojson']){
+    try{
+      res = await fetch(u);
+      if(res.ok){ url=u; break; }
+    }catch(e){}
   }
+  if(!res || !res.ok){
+    document.getElementById('loading').innerHTML = `
+      <div style="color:#b71c1c;text-align:center;padding:20px;max-width:500px">
+        <strong style="font-size:15px">Lỗi tải dữ liệu</strong><br>
+        <small style="display:block;margin-top:8px;color:#555">Không tìm thấy file <code>diachinh.geojson</code></small>
+        <small style="display:block;margin-top:6px;color:#777;line-height:1.5">
+          Đảm bảo file <code>diachinh.geojson</code> được đặt cùng thư mục với <code>index.html</code>,<br>
+          hoặc trong thư mục con <code>data/</code>.
+        </small>
+      </div>`;
+    return;
+  }
+  allData = await res.json();
+  renderAll();
+  document.getElementById('loading').style.display='none';
+  toast(`Đã tải ${allData.features.length.toLocaleString('vi-VN')} thửa đất`,'ok');
 }
 
-// ===== RENDER =====
 function renderAll(){
   buildFilters();
   applyFilters();
@@ -569,267 +597,216 @@ function renderAll(){
 }
 
 function initStatChips(){
-  const total = allData.features.length;
-  document.getElementById('stat-total').textContent = total.toLocaleString('vi-VN');
+  document.getElementById('s-total').textContent = allData.features.length.toLocaleString('vi-VN');
   const totalArea = allData.features.reduce((s,f)=>s+(f.properties.dt||0),0)/10000;
-  document.getElementById('stat-area').textContent = totalArea.toFixed(2);
+  document.getElementById('s-area').textContent = totalArea.toFixed(2);
 }
 
 function buildFilters(){
-  // Đề xuất xử lý
-  const dxCounts = {};
-  const xaCounts = {};
-  const loaiCounts = {};
+  const dx={}, xa={}, loai={};
   for(const f of allData.features){
-    const p = f.properties;
-    dxCounts[p.de_xuat] = (dxCounts[p.de_xuat]||0)+1;
-    xaCounts[p.xa_cu] = (xaCounts[p.xa_cu]||0)+1;
-    const loai = p.loai || '(trống)';
-    loaiCounts[loai] = (loaiCounts[loai]||0)+1;
+    const p=f.properties;
+    dx[p.de_xuat]=(dx[p.de_xuat]||0)+1;
+    xa[p.xa_cu]=(xa[p.xa_cu]||0)+1;
+    const lk=p.loai||'(trống)';
+    loai[lk]=(loai[lk]||0)+1;
   }
-
-  const dxOrder = ['da_bangiao_2018','tieptuc_bangiao','giulai_cph','rasoat_them'];
-  const dxEl = document.getElementById('filter-dexuat');
-  dxEl.innerHTML = '';
-  for(const k of dxOrder){
-    if(!dxCounts[k]) continue;
+  const dxEl=document.getElementById('f-dx'); dxEl.innerHTML='';
+  ['da_bangiao_2018','tieptuc_bangiao','giulai_cph','rasoat_them'].forEach(k=>{
+    if(!dx[k]) return;
     dxEl.innerHTML += `<label class="cb-item">
-      <input type="checkbox" data-filter="de_xuat" value="${k}" checked>
-      <span class="color-dot" style="background:${COLORS[k]}"></span>
-      <span>${DE_XUAT_LABEL[k]}</span>
-      <span class="badge">${dxCounts[k]}</span>
+      <input type="checkbox" data-f="de_xuat" value="${k}" checked>
+      <span class="dot" style="background:${COLORS[k]}"></span>
+      <span>${DX_LBL[k]}</span><span class="cnt">${dx[k]}</span>
     </label>`;
-  }
-
-  const xaOrder = ['Phú Cát','Hòa Thạch','Đông Yên'];
-  const xaEl = document.getElementById('filter-xa');
-  xaEl.innerHTML = '';
-  for(const k of xaOrder){
-    if(!xaCounts[k]) continue;
-    xaEl.innerHTML += `<label class="cb-item">
-      <input type="checkbox" data-filter="xa_cu" value="${k}" checked>
-      <span>Xã ${k} (cũ)</span>
-      <span class="badge">${xaCounts[k]}</span>
-    </label>`;
-  }
-
-  const loaiSorted = Object.entries(loaiCounts).sort((a,b)=>b[1]-a[1]);
-  const loaiEl = document.getElementById('filter-loai');
-  loaiEl.innerHTML = '';
-  for(const [k,c] of loaiSorted){
-    const name = LOAI_DAT_NAMES[k] || k;
-    loaiEl.innerHTML += `<label class="cb-item">
-      <input type="checkbox" data-filter="loai" value="${k}" checked>
-      <span style="font-size:12px">${k} <span style="color:#9aa8b6">— ${name}</span></span>
-      <span class="badge">${c}</span>
-    </label>`;
-  }
-
-  // Bind events
-  document.querySelectorAll('[data-filter]').forEach(cb=>{
-    cb.addEventListener('change', applyFilters);
   });
-  document.getElementById('quick-search').addEventListener('input', applyFilters);
+  const xaEl=document.getElementById('f-xa'); xaEl.innerHTML='';
+  ['Phú Cát','Hòa Thạch','Đông Yên'].forEach(k=>{
+    if(!xa[k]) return;
+    xaEl.innerHTML += `<label class="cb-item">
+      <input type="checkbox" data-f="xa_cu" value="${k}" checked>
+      <span>Xã ${k} (cũ)</span><span class="cnt">${xa[k]}</span>
+    </label>`;
+  });
+  const loaiEl=document.getElementById('f-loai'); loaiEl.innerHTML='';
+  Object.entries(loai).sort((a,b)=>b[1]-a[1]).forEach(([k,c])=>{
+    const name = LD[k] || k;
+    loaiEl.innerHTML += `<label class="cb-item">
+      <input type="checkbox" data-f="loai" value="${k}" checked>
+      <span style="font-size:12px">${k} <span style="color:var(--text-mute)">— ${name}</span></span>
+      <span class="cnt">${c}</span>
+    </label>`;
+  });
+  document.querySelectorAll('[data-f]').forEach(cb=>cb.addEventListener('change',applyFilters));
+  document.getElementById('q-search').addEventListener('input',applyFilters);
 }
 
-function getSelectedValues(filter){
-  return Array.from(document.querySelectorAll(`[data-filter="${filter}"]:checked`)).map(c=>c.value);
+function selVals(f){
+  return Array.from(document.querySelectorAll(`[data-f="${f}"]:checked`)).map(c=>c.value);
 }
 
 function applyFilters(){
-  const dx = new Set(getSelectedValues('de_xuat'));
-  const xa = new Set(getSelectedValues('xa_cu'));
-  const loai = new Set(getSelectedValues('loai'));
-  const q = (document.getElementById('quick-search').value||'').trim().toLowerCase();
-
+  const dx=new Set(selVals('de_xuat')), xa=new Set(selVals('xa_cu')), loai=new Set(selVals('loai'));
+  const q=(document.getElementById('q-search').value||'').trim().toLowerCase();
   filtered = allData.features.filter(f=>{
-    const p = f.properties;
+    const p=f.properties;
     if(!dx.has(p.de_xuat)) return false;
     if(!xa.has(p.xa_cu)) return false;
-    const lkey = p.loai || '(trống)';
-    if(!loai.has(lkey)) return false;
+    if(!loai.has(p.loai||'(trống)')) return false;
     if(q){
-      const hay = ((p.ten||'')+' '+p.tbd+'-'+p.thua).toLowerCase();
+      const hay=((p.ten||'')+' '+p.tbd+'-'+p.thua).toLowerCase();
       if(!hay.includes(q)) return false;
     }
     return true;
   });
-
   drawLayer();
-  renderResultsList();
-  document.getElementById('stat-visible').textContent = filtered.length.toLocaleString('vi-VN');
+  renderResults();
+  document.getElementById('s-vis').textContent = filtered.length.toLocaleString('vi-VN');
 }
 
 function drawLayer(){
   if(geoLayer) map.removeLayer(geoLayer);
-  geoLayer = L.geoJSON({type:'FeatureCollection',features:filtered}, {
-    style: f=>getStyle(f.properties),
-    onEachFeature: (f, layer)=>{
-      const p = f.properties;
+  geoLayer = L.geoJSON({type:'FeatureCollection',features:filtered},{
+    style: f=>styleFor(f.properties),
+    onEachFeature:(f,layer)=>{
+      const p=f.properties;
       layer.on({
-        click: ()=>selectFeature(p.id),
-        mouseover: ()=>{ if(p.id!==selectedId) layer.setStyle({weight:1.5,color:'#fff'}); },
-        mouseout: ()=>{ if(p.id!==selectedId) layer.setStyle(getStyle(p)); }
+        click:()=>selectFeature(p.id),
+        mouseover:()=>{ if(p.id!==selectedId) layer.setStyle({weight:1.5,color:'#fff'}); },
+        mouseout:()=>{ if(p.id!==selectedId) layer.setStyle(styleFor(p)); }
       });
-      // Tooltip
-      layer.bindTooltip(`<b>${p.tbd}-${p.thua}</b><br>${p.ten||''}`, {sticky:true, direction:'top'});
+      layer.bindTooltip(`<b>${p.tbd}-${p.thua}</b><br>${p.ten||''}`,{sticky:true,direction:'top'});
     }
   }).addTo(map);
 }
 
-function renderResultsList(){
-  const list = document.getElementById('results-list');
-  if(filtered.length === 0){
-    list.innerHTML = '<div class="result-empty">Không có thửa nào khớp bộ lọc</div>';
+function renderResults(){
+  const list=document.getElementById('r-list');
+  if(filtered.length===0){
+    list.innerHTML='<div class="r-empty">Không có thửa nào khớp bộ lọc</div>';
     return;
   }
-  // Hiển thị tối đa 200 thửa đầu để không lag
-  const slice = filtered.slice(0,200);
+  const slice=filtered.slice(0,200);
   list.innerHTML = slice.map(f=>{
-    const p = f.properties;
-    return `<div class="result-item${selectedId===p.id?' active':''}" data-id="${p.id}">
-      <div class="ri-title">Tờ ${p.tbd} — Thửa ${p.thua}</div>
-      <div class="ri-sub"><span>${(p.ten||'(không có)').slice(0,30)}</span><span>${p.dt} m²</span></div>
+    const p=f.properties;
+    return `<div class="r-item${selectedId===p.id?' active':''}" data-id="${p.id}">
+      <div class="rt">Tờ ${p.tbd} — Thửa ${p.thua}</div>
+      <div class="rs"><span>${(p.ten||'(không có)').slice(0,32)}</span><span>${p.dt} m²</span></div>
     </div>`;
   }).join('');
-  if(filtered.length > 200){
-    list.innerHTML += `<div class="result-empty">+ ${filtered.length-200} thửa khác... Dùng tra cứu để lọc tiếp.</div>`;
+  if(filtered.length>200){
+    list.innerHTML += `<div class="r-empty">+ ${filtered.length-200} thửa khác. Dùng "Tra cứu" để xem đầy đủ.</div>`;
   }
-  list.querySelectorAll('.result-item').forEach(el=>{
-    el.addEventListener('click', ()=>selectFeature(el.dataset.id));
-  });
+  list.querySelectorAll('.r-item').forEach(el=>el.addEventListener('click',()=>selectFeature(el.dataset.id)));
 }
 
-// ===== SELECT FEATURE =====
-function findFeature(id){
-  return allData.features.find(f=>f.properties.id === id);
-}
+function findFeature(id){ return allData.features.find(f=>f.properties.id===id); }
 
 function selectFeature(id, zoom=false){
-  selectedId = id;
-  const f = findFeature(id);
-  if(!f) return;
-  renderResultsList(); // refresh highlight
-  drawLayer(); // redraw to clear previous highlight
-  // Highlight current
+  selectedId=id;
+  const f=findFeature(id); if(!f) return;
+  renderResults();
+  drawLayer();
   geoLayer.eachLayer(l=>{
     if(l.feature && l.feature.properties.id===id){
-      l.setStyle(getHighlightStyle());
-      l.bringToFront();
-      if(zoom){
-        map.fitBounds(l.getBounds(), {maxZoom:19, padding:[40,40]});
-      }
+      l.setStyle(HL_STYLE); l.bringToFront();
+      if(zoom) map.fitBounds(l.getBounds(),{maxZoom:19,padding:[40,40]});
     }
   });
   showDetail(f);
 }
 
-// ===== DETAIL PANEL =====
-let currentTab = 'info';
-
 function showDetail(f){
-  const p = f.properties;
-  document.getElementById('dp-title').textContent = `Tờ ${p.tbd} — Thửa ${p.thua}`;
-  document.getElementById('dp-subtitle').textContent = `Xã ${p.xa_cu} (cũ) · ${LOAI_DAT_NAMES[p.loai]||p.loai||'—'} · ${p.dt} m²`;
+  const p=f.properties;
+  document.getElementById('d-title').textContent = `Tờ ${p.tbd} — Thửa ${p.thua}`;
+  document.getElementById('d-subtitle').textContent = `Xã ${p.xa_cu} (cũ) · ${LD[p.loai]||p.loai||'—'} · ${p.dt} m²`;
   renderTab(currentTab, p);
-  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('detail').classList.add('open');
 }
 
-function renderTab(tab, p){
-  currentTab = tab;
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
-  const body = document.getElementById('dp-body');
-  const edits = userEdits[p.id] || {};
+function renderTab(tab,p){
+  currentTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  const body=document.getElementById('d-body');
+  const e=userEdits[p.id]||{};
 
   if(tab==='info'){
     body.innerHTML = `
-      <div class="detail-section">
+      <div class="d-sec">
         <h3>Thông tin cơ bản</h3>
-        <dl class="attr-grid">
+        <dl class="attr">
           <dt>Tờ bản đồ</dt><dd>${p.tbd}</dd>
           <dt>Số thửa</dt><dd>${p.thua}</dd>
           <dt>Xã cũ</dt><dd>${p.xa_cu}</dd>
-          <dt>Tên chủ sử dụng</dt><dd ${p.ten?'':'class="empty"'}>${p.ten||'(chưa xác định)'}</dd>
+          <dt>Tên chủ sử dụng</dt><dd ${p.ten?'':'class="muted"'}>${p.ten||'(chưa xác định)'}</dd>
           <dt>Diện tích bản đồ</dt><dd>${p.dt} m²</dd>
-          <dt>Loại đất</dt><dd>${p.loai||'(trống)'} ${p.loai && LOAI_DAT_NAMES[p.loai]?`— ${LOAI_DAT_NAMES[p.loai]}`:''}</dd>
+          <dt>Loại đất</dt><dd>${p.loai||'(trống)'} ${p.loai && LD[p.loai]?`— ${LD[p.loai]}`:''}</dd>
           <dt>Đã cấp GCN</dt><dd>${p.cap_gcn?'✓ Đã cấp':'Chưa cấp'}</dd>
-          <dt>Đề xuất xử lý</dt><dd><span class="badge-pill ${DE_XUAT_BADGE[p.de_xuat]}">${DE_XUAT_LABEL[p.de_xuat]}</span></dd>
+          <dt>Đề xuất xử lý</dt><dd><span class="pill ${DX_PILL[p.de_xuat]}">${DX_LBL[p.de_xuat]}</span></dd>
         </dl>
       </div>
-
       ${p.b3 ? `
-      <div class="detail-section">
+      <div class="d-sec">
         <h3>Hồ sơ rà soát 2019 (Biểu 3)</h3>
-        <dl class="attr-grid">
-          <dt>Thời gian nhận khoán</dt><dd ${p.tg_khoan?'':'class="empty"'}>${p.tg_khoan||'(chưa rõ)'}</dd>
+        <dl class="attr">
+          <dt>Thời gian khoán</dt><dd ${p.tg_khoan?'':'class="muted"'}>${p.tg_khoan||'(chưa rõ)'}</dd>
           <dt>DT giao khoán</dt><dd>${p.dt_gk?p.dt_gk+' m²':'(không có)'}</dd>
           <dt>- Đất ở</dt><dd>${p.dt_o_gk?p.dt_o_gk+' m²':'—'}</dd>
           <dt>- Cây lâu năm</dt><dd>${p.dt_cln_gk?p.dt_cln_gk+' m²':'—'}</dd>
           <dt>DT thực tế 2018</dt><dd>${p.dt_tt?p.dt_tt+' m²':'—'}</dd>
           <dt>DT bàn giao 2018</dt><dd>${p.dt_bg?p.dt_bg+' m²':'—'}</dd>
-          <dt>Ghi chú gốc</dt><dd ${p.nn?'':'class="empty"'}>${p.nn||'(không có)'}</dd>
+          <dt>Ghi chú gốc</dt><dd ${p.nn?'':'class="muted"'}>${p.nn||'(không có)'}</dd>
         </dl>
         ${p.dt_tt && Math.abs(p.dt_tt - p.dt) > 100 ? `
-        <div class="note-info">
-          ⚠️ Chênh lệch DT thực tế (Biểu 3) vs DT bản đồ (SMK): <strong>${(p.dt_tt - p.dt).toFixed(1)} m²</strong> — cần kiểm tra thực địa.
-        </div>` : ''}
-      </div>
-      ` : `
-      <div class="detail-section">
-        <div class="note-info">
-          ℹ️ Thửa này KHÔNG có trong Biểu 3 (rà soát 2019). Có thể thuộc nhóm đất Cty giữ lại, đất giao thông, thủy lợi, hoặc cần rà soát bổ sung.
-        </div>
-      </div>
-      `}
+        <div class="note warn">⚠️ <b>Cảnh báo chênh lệch:</b> DT thực tế (Biểu 3) chênh DT bản đồ (SMK): <b>${(p.dt_tt - p.dt).toFixed(1)} m²</b> — cần kiểm tra thực địa.</div>` : ''}
+      </div>` : `
+      <div class="d-sec">
+        <div class="note">ℹ️ Thửa này KHÔNG có trong Biểu 3 (rà soát 2019). Có thể thuộc nhóm đất Cty giữ lại, đất giao thông, thủy lợi, đất công cộng — hoặc cần rà soát bổ sung.</div>
+      </div>`}
     `;
   }
   else if(tab==='legal'){
     body.innerHTML = `
-      <div class="detail-section">
+      <div class="d-sec">
         <h3>Quan hệ pháp lý hiện tại</h3>
-        <div class="edit-grid">
+        <div class="edit-grp">
           <div class="edit-row">
             <label>Tình hình sử dụng</label>
-            <select id="ed-phap_ly">
-              ${PHAP_LY_OPTIONS.map(o=>`<option ${edits.phap_ly===o?'selected':''}>${o}</option>`).join('')}
-            </select>
+            <select id="ed-phap_ly">${PHAP_LY.map(o=>`<option ${e.phap_ly===o?'selected':''}>${o}</option>`).join('')}</select>
           </div>
           <div class="edit-row">
             <label>Trạng thái kê khai</label>
-            <select id="ed-ke_khai">
-              ${KE_KHAI_OPTIONS.map(o=>`<option ${edits.ke_khai===o?'selected':''}>${o}</option>`).join('')}
-            </select>
+            <select id="ed-ke_khai">${KE_KHAI.map(o=>`<option ${e.ke_khai===o?'selected':''}>${o}</option>`).join('')}</select>
           </div>
           <div class="edit-row">
             <label>Ghi chú pháp lý</label>
-            <textarea id="ed-ghi_chu" placeholder="Tranh chấp, lấn chiếm, hợp đồng giao khoán...">${edits.ghi_chu||''}</textarea>
+            <textarea id="ed-ghi_chu" placeholder="Tranh chấp, lấn chiếm, hợp đồng giao khoán...">${e.ghi_chu||''}</textarea>
           </div>
         </div>
-        <div class="note-info">
-          Căn cứ Điều 181 Luật Đất đai 2024, Nghị định 102/2024/NĐ-CP để phân loại.
-        </div>
+        <div class="note">Căn cứ Điều 181 Luật Đất đai 2024 và Nghị định 102/2024/NĐ-CP để phân loại.</div>
       </div>
     `;
   }
   else if(tab==='build'){
     body.innerHTML = `
-      <div class="detail-section">
+      <div class="d-sec">
         <h3>Công trình xây dựng trên đất</h3>
-        <div class="edit-grid">
+        <div class="edit-grp">
           <div class="edit-row">
             <label>Diện tích công trình (m²)</label>
-            <input type="number" id="ed-ct_dt" value="${edits.ct_dt||''}" placeholder="VD: 80">
+            <input type="number" id="ed-ct_dt" value="${e.ct_dt||''}" placeholder="VD: 80">
           </div>
           <div class="edit-row">
             <label>Năm xây dựng</label>
-            <input type="number" id="ed-ct_nam" value="${edits.ct_nam||''}" placeholder="VD: 2005">
+            <input type="number" id="ed-ct_nam" value="${e.ct_nam||''}" placeholder="VD: 2005">
           </div>
           <div class="edit-row">
             <label>Loại công trình</label>
-            <select id="ed-ct_loai">
-              <option ${!edits.ct_loai?'selected':''}>— Chọn —</option>
-              ${['Nhà ở cấp 4','Nhà ở 1 tầng','Nhà ở 2 tầng trở lên','Nhà cấp 3 (kiên cố)','Nhà tạm','Chuồng trại','Nhà xưởng','Công trình phụ trợ','Khác'].map(o=>`<option ${edits.ct_loai===o?'selected':''}>${o}</option>`).join('')}
-            </select>
+            <select id="ed-ct_loai">${CT_LOAI.map(o=>`<option ${e.ct_loai===o?'selected':''}>${o}</option>`).join('')}</select>
+          </div>
+          <div class="edit-row">
+            <label>Mô tả công trình</label>
+            <textarea id="ed-ct_mota" placeholder="VD: Nhà mái ngói, móng gạch, có hệ thống cấp thoát nước...">${e.ct_mota||''}</textarea>
           </div>
         </div>
       </div>
@@ -837,17 +814,24 @@ function renderTab(tab, p){
   }
   else if(tab==='files'){
     body.innerHTML = `
-      <div class="detail-section">
-        <h3>Hình ảnh & hồ sơ liên quan</h3>
-        <div class="edit-grid">
+      <div class="d-sec">
+        <h3>Liên lạc chủ sử dụng</h3>
+        <div class="edit-grp">
           <div class="edit-row">
-            <label>Thông tin liên lạc chủ sử dụng</label>
-            <input type="text" id="ed-lien_lac" value="${edits.lien_lac||''}" placeholder="VD: SĐT 09xx, địa chỉ tạm trú...">
+            <label>Số điện thoại</label>
+            <input type="text" id="ed-sdt" value="${e.sdt||''}" placeholder="VD: 0912 345 678">
+          </div>
+          <div class="edit-row">
+            <label>Địa chỉ liên hệ</label>
+            <input type="text" id="ed-diachi" value="${e.diachi||''}" placeholder="VD: Thôn X, xã Phú Cát">
+          </div>
+          <div class="edit-row">
+            <label>Người liên hệ thay (nếu có)</label>
+            <input type="text" id="ed-nguoi_lh" value="${e.nguoi_lh||''}" placeholder="VD: Con/cháu...">
           </div>
         </div>
-        <div class="note-info" style="margin-top:14px">
-          📷 Để đính kèm ảnh thửa đất / giấy tờ liên quan: phiên bản WebGIS này lưu thông tin tạm trong bộ nhớ trình duyệt. <br>
-          Phiên bản tích hợp Firebase Storage (đã có ở dự án kê khai trực tuyến) sẽ cho phép upload và lưu trữ lâu dài. Đề xuất tích hợp khi triển khai chính thức.
+        <div class="note" style="margin-top:14px">
+          📷 <b>Đính kèm ảnh:</b> Phiên bản tĩnh này chưa hỗ trợ upload ảnh trực tiếp. Phiên bản tích hợp Firebase Storage / server riêng sẽ cho phép upload ảnh thửa đất, ảnh giấy tờ, ảnh hiện trạng. Đề xuất tích hợp khi triển khai chính thức.
         </div>
       </div>
     `;
@@ -856,172 +840,190 @@ function renderTab(tab, p){
 
 function saveEdits(){
   if(!selectedId) return;
-  const e = userEdits[selectedId] || {};
-  // Gom từ tất cả input của tab hiện tại
-  ['phap_ly','ke_khai','ghi_chu','ct_dt','ct_nam','ct_loai','lien_lac'].forEach(k=>{
-    const el = document.getElementById('ed-'+k);
-    if(el) e[k] = el.value;
+  const e=userEdits[selectedId]||{};
+  ['phap_ly','ke_khai','ghi_chu','ct_dt','ct_nam','ct_loai','ct_mota','sdt','diachi','nguoi_lh'].forEach(k=>{
+    const el=document.getElementById('ed-'+k);
+    if(el) e[k]=el.value;
   });
-  userEdits[selectedId] = e;
-  // Notification ngắn
-  const btn = document.getElementById('btn-save');
-  const old = btn.innerHTML;
-  btn.innerHTML = '✓ Đã lưu';
-  btn.style.background = '#27ae60';
-  setTimeout(()=>{ btn.innerHTML = old; btn.style.background=''; }, 1400);
+  userEdits[selectedId]=e;
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(userEdits)); toast('Đã lưu vào trình duyệt','ok'); }
+  catch(err){ toast('Lỗi lưu localStorage: '+err.message,'err'); }
 }
 
-// ===== TABS =====
 document.querySelectorAll('.tab-btn').forEach(b=>{
-  b.addEventListener('click', ()=>{
+  b.addEventListener('click',()=>{
     if(!selectedId) return;
-    const f = findFeature(selectedId);
-    if(f) renderTab(b.dataset.tab, f.properties);
+    const f=findFeature(selectedId);
+    if(f) renderTab(b.dataset.tab,f.properties);
   });
 });
 
 // ===== MENU =====
-document.querySelectorAll('.menu-bar button').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    const m = b.dataset.menu;
-    if(m==='map'){
-      document.querySelectorAll('.menu-bar button').forEach(x=>x.classList.toggle('active', x===b));
-    }
-    else if(m==='lookup') openModal('modal-lookup');
-    else if(m==='stats'){ buildStats(); openModal('modal-stats'); }
-    else if(m==='help') openModal('modal-help');
+document.querySelectorAll('.menu button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const m=b.dataset.menu;
+    if(m==='map') document.querySelectorAll('.menu button').forEach(x=>x.classList.toggle('active',x===b));
+    else if(m==='lookup') openM('m-lookup');
+    else if(m==='stats'){ buildStats(); openM('m-stats'); }
+    else if(m==='help') openM('m-help');
   });
 });
-
-function openModal(id){ document.getElementById(id).classList.add('open'); }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('[data-close]').forEach(b=>{
-  b.addEventListener('click', ()=>closeModal(b.dataset.close));
-});
+function openM(id){ document.getElementById(id).classList.add('open'); }
+function closeM(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>closeM(b.dataset.close)));
 
 // ===== LOOKUP =====
-document.getElementById('btn-do-lookup').addEventListener('click', ()=>{
-  const tbd = document.getElementById('lk-tbd').value;
-  const thua = document.getElementById('lk-thua').value;
-  const ten = document.getElementById('lk-ten').value.trim().toLowerCase();
-  const xa = document.getElementById('lk-xa').value;
-  const dtmin = parseFloat(document.getElementById('lk-dtmin').value) || 0;
-  const dtmax = parseFloat(document.getElementById('lk-dtmax').value) || Infinity;
-  const results = allData.features.filter(f=>{
-    const p = f.properties;
+let lookupResults=[];
+document.getElementById('btn-lk-go').addEventListener('click',()=>{
+  const tbd=document.getElementById('lk-tbd').value;
+  const thua=document.getElementById('lk-thua').value;
+  const ten=document.getElementById('lk-ten').value.trim().toLowerCase();
+  const xa=document.getElementById('lk-xa').value;
+  const dtmin=parseFloat(document.getElementById('lk-dtmin').value)||0;
+  const dtmax=parseFloat(document.getElementById('lk-dtmax').value)||Infinity;
+  lookupResults = allData.features.filter(f=>{
+    const p=f.properties;
     if(tbd && p.tbd!=parseInt(tbd)) return false;
     if(thua && p.thua!=parseInt(thua)) return false;
     if(ten && !(p.ten||'').toLowerCase().includes(ten)) return false;
-    if(xa && p.xa_cu !== xa) return false;
-    if(p.dt < dtmin || p.dt > dtmax) return false;
+    if(xa && p.xa_cu!==xa) return false;
+    if(p.dt<dtmin || p.dt>dtmax) return false;
     return true;
   });
-  const div = document.getElementById('lookup-results');
-  if(results.length === 0){
-    div.innerHTML = '<div style="padding:20px;text-align:center;color:#7a8b9c">Không có kết quả</div>';
+  renderLookupResults();
+});
+function renderLookupResults(){
+  const div=document.getElementById('lk-res');
+  if(lookupResults.length===0){
+    div.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-mute)">Không có kết quả</div>';
     return;
   }
   div.innerHTML = `<table>
-    <thead><tr><th>Tờ</th><th>Thửa</th><th>Tên chủ</th><th>Loại</th><th>DT (m²)</th><th>Đề xuất</th></tr></thead>
-    <tbody>
-      ${results.slice(0,500).map(f=>{
-        const p = f.properties;
-        return `<tr data-id="${p.id}"><td>${p.tbd}</td><td>${p.thua}</td><td>${p.ten||'—'}</td><td>${p.loai||''}</td><td>${p.dt}</td><td><span class="badge-pill ${DE_XUAT_BADGE[p.de_xuat]}">${DE_XUAT_LABEL[p.de_xuat]}</span></td></tr>`;
-      }).join('')}
-    </tbody></table>
-    ${results.length>500?`<div style="padding:8px;text-align:center;color:#7a8b9c;font-size:11.5px">Hiển thị 500/${results.length} kết quả. Lọc thêm để thu hẹp.</div>`:''}`;
+    <thead><tr><th>Tờ</th><th>Thửa</th><th>Tên chủ</th><th>Loại</th><th>DT (m²)</th><th>Xã cũ</th><th>Đề xuất</th></tr></thead>
+    <tbody>${lookupResults.slice(0,500).map(f=>{
+      const p=f.properties;
+      return `<tr data-id="${p.id}"><td>${p.tbd}</td><td>${p.thua}</td><td>${p.ten||'—'}</td><td>${p.loai||''}</td><td>${p.dt}</td><td>${p.xa_cu}</td><td><span class="pill ${DX_PILL[p.de_xuat]}">${DX_LBL[p.de_xuat]}</span></td></tr>`;
+    }).join('')}</tbody></table>
+    ${lookupResults.length>500?`<div style="padding:8px;text-align:center;color:var(--text-mute);font-size:11.5px">Hiển thị 500/${lookupResults.length} kết quả. Lọc thêm để thu hẹp.</div>`:''}`;
   div.querySelectorAll('tr[data-id]').forEach(tr=>{
-    tr.addEventListener('click', ()=>{
-      closeModal('modal-lookup');
-      selectFeature(tr.dataset.id, true);
-    });
+    tr.addEventListener('click',()=>{ closeM('m-lookup'); selectFeature(tr.dataset.id,true); });
   });
+}
+document.getElementById('btn-lk-csv').addEventListener('click',()=>{
+  if(!lookupResults.length){ toast('Chưa có kết quả tra cứu','err'); return; }
+  const headers=['Tờ BĐ','Thửa','Tên chủ SD','Loại đất','DT (m²)','Xã cũ','DT thực tế','DT bàn giao','Thời gian khoán','Đề xuất xử lý'];
+  const rows=lookupResults.map(f=>{
+    const p=f.properties;
+    return [p.tbd,p.thua,(p.ten||'').replace(/"/g,'""'),p.loai||'',p.dt,p.xa_cu,p.dt_tt||'',p.dt_bg||'',(p.tg_khoan||'').replace(/"/g,'""'),DX_LBL[p.de_xuat]];
+  });
+  const csv = '\uFEFF'+headers.join(',')+'\n'+rows.map(r=>r.map(v=>typeof v==='string'&&v.includes(',')?`"${v}"`:v).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`tracuu_chelongphu_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('Đã tải xuống CSV','ok');
 });
 
 // ===== STATS =====
 function buildStats(){
-  const features = allData.features;
-  // 1. Theo đề xuất xử lý
-  const byDx = {}, byXa = {}, byLoai = {}, byTime = {};
-  let totalArea = 0;
-  for(const f of features){
-    const p = f.properties;
-    const dt = p.dt || 0;
-    totalArea += dt;
-    byDx[p.de_xuat] = byDx[p.de_xuat] || {count:0, area:0};
-    byDx[p.de_xuat].count++; byDx[p.de_xuat].area += dt;
-    byXa[p.xa_cu] = byXa[p.xa_cu] || {count:0, area:0};
-    byXa[p.xa_cu].count++; byXa[p.xa_cu].area += dt;
-    const lk = p.loai || '(trống)';
-    byLoai[lk] = byLoai[lk] || {count:0, area:0};
-    byLoai[lk].count++; byLoai[lk].area += dt;
+  const fs=allData.features;
+  const byDx={},byXa={},byLoai={},byTime={};
+  let total=0;
+  for(const f of fs){
+    const p=f.properties, dt=p.dt||0; total+=dt;
+    byDx[p.de_xuat]=byDx[p.de_xuat]||{c:0,a:0}; byDx[p.de_xuat].c++; byDx[p.de_xuat].a+=dt;
+    byXa[p.xa_cu]=byXa[p.xa_cu]||{c:0,a:0}; byXa[p.xa_cu].c++; byXa[p.xa_cu].a+=dt;
+    const lk=p.loai||'(trống)';
+    byLoai[lk]=byLoai[lk]||{c:0,a:0}; byLoai[lk].c++; byLoai[lk].a+=dt;
     if(p.tg_khoan){
-      byTime[p.tg_khoan] = byTime[p.tg_khoan] || {count:0, area:0};
-      byTime[p.tg_khoan].count++;
-      byTime[p.tg_khoan].area += (p.dt_bg || p.dt_tt || dt);
+      byTime[p.tg_khoan]=byTime[p.tg_khoan]||{c:0,a:0};
+      byTime[p.tg_khoan].c++; byTime[p.tg_khoan].a+=(p.dt_bg||p.dt_tt||dt);
     }
   }
+  // Đếm tiến độ rà soát từ localStorage
+  let daRaSoat = Object.values(userEdits).filter(e=>e.phap_ly && e.phap_ly!=='Chưa xác định').length;
+  let progress = (daRaSoat/fs.length*100).toFixed(1);
 
-  let html = `<div class="stat-card">
-    <h4>Tổng quan <span class="pill">Toàn khu</span></h4>
-    <div class="stat-row"><span>Tổng số thửa</span><span>${features.length.toLocaleString('vi-VN')}</span></div>
-    <div class="stat-row"><span>Tổng diện tích</span><span>${(totalArea/10000).toFixed(2)} ha (${totalArea.toLocaleString('vi-VN',{maximumFractionDigits:1})} m²)</span></div>
+  let h = `<div class="stat-card">
+    <h4>Tổng quan <span class="tag">Toàn khu</span></h4>
+    <div class="stat-row"><span>Tổng số thửa</span><span>${fs.length.toLocaleString('vi-VN')}</span></div>
+    <div class="stat-row"><span>Tổng diện tích</span><span>${(total/10000).toFixed(2)} ha · ${total.toLocaleString('vi-VN',{maximumFractionDigits:1})} m²</span></div>
     <div class="stat-row"><span>Số tờ bản đồ</span><span>41</span></div>
+    <div class="stat-row"><span>Đã rà soát thực địa</span><span>${daRaSoat.toLocaleString('vi-VN')} thửa (${progress}%)</span></div>
   </div>`;
 
-  // Đề xuất xử lý
-  html += `<div class="stat-card">
-    <h4>Theo đề xuất xử lý <span class="pill">đợt 2026</span></h4>`;
+  h += `<div class="stat-card"><h4>Theo đề xuất xử lý <span class="tag">đợt 2026</span></h4>`;
   ['da_bangiao_2018','tieptuc_bangiao','giulai_cph','rasoat_them'].forEach(k=>{
     if(!byDx[k]) return;
-    html += `<div class="stat-row"><span><span class="color-dot" style="background:${COLORS[k]};display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px"></span>${DE_XUAT_LABEL[k]}</span><span>${byDx[k].count} thửa · ${(byDx[k].area/10000).toFixed(2)} ha</span></div>`;
+    h += `<div class="stat-row"><span><span style="display:inline-block;width:11px;height:11px;background:${COLORS[k]};border-radius:2px;margin-right:6px;vertical-align:middle"></span>${DX_LBL[k]}</span><span>${byDx[k].c.toLocaleString('vi-VN')} thửa · ${(byDx[k].a/10000).toFixed(2)} ha</span></div>`;
   });
-  html += `</div>`;
+  h += `</div>`;
 
-  // Xã cũ
-  html += `<div class="stat-card"><h4>Theo xã cũ</h4>`;
+  h += `<div class="stat-card"><h4>Theo xã cũ</h4>`;
   ['Phú Cát','Hòa Thạch','Đông Yên'].forEach(k=>{
     if(!byXa[k]) return;
-    html += `<div class="stat-row"><span>Xã ${k} (cũ)</span><span>${byXa[k].count} thửa · ${(byXa[k].area/10000).toFixed(2)} ha</span></div>`;
+    h += `<div class="stat-row"><span>Xã ${k} (cũ)</span><span>${byXa[k].c.toLocaleString('vi-VN')} thửa · ${(byXa[k].a/10000).toFixed(2)} ha</span></div>`;
   });
-  html += `</div>`;
+  h += `</div>`;
 
-  // Loại đất
-  html += `<div class="stat-card"><h4>Theo loại đất</h4>`;
-  Object.entries(byLoai).sort((a,b)=>b[1].count-a[1].count).forEach(([k,v])=>{
-    const name = LOAI_DAT_NAMES[k] || k;
-    html += `<div class="stat-row"><span>${k} <span style="color:#9aa8b6;font-size:11.5px">— ${name}</span></span><span>${v.count} thửa · ${(v.area/10000).toFixed(2)} ha</span></div>`;
+  h += `<div class="stat-card"><h4>Theo loại đất</h4>`;
+  Object.entries(byLoai).sort((a,b)=>b[1].c-a[1].c).forEach(([k,v])=>{
+    h += `<div class="stat-row"><span>${k} <span style="color:var(--text-mute);font-size:11.5px">— ${LD[k]||k}</span></span><span>${v.c} thửa · ${(v.a/10000).toFixed(2)} ha</span></div>`;
   });
-  html += `</div>`;
+  h += `</div>`;
 
-  // Thời gian nhận khoán
   if(Object.keys(byTime).length){
-    html += `<div class="stat-card"><h4>Theo thời gian nhận khoán <span class="pill">Biểu 3</span></h4>`;
-    const order = ['Trước 15/10/1993','Từ 15/10/1993 đến 01/7/2004','Từ 01/7/2004 đến 04/11/2008','Từ 04/11/2008 đến 01/7/2014','Từ 01/7/2014 đến 19/8/2019','Chưa có hồ sơ'];
-    order.forEach(k=>{
+    h += `<div class="stat-card"><h4>Theo thời gian nhận khoán <span class="tag">Biểu 3</span></h4>`;
+    ['Trước 15/10/1993','Từ 15/10/1993 đến 01/7/2004','Từ 01/7/2004 đến 04/11/2008','Từ 04/11/2008 đến 01/7/2014','Từ 01/7/2014 đến 19/8/2019','Chưa có hồ sơ'].forEach(k=>{
       if(!byTime[k]) return;
-      html += `<div class="stat-row"><span>${k}</span><span>${byTime[k].count} thửa · ${(byTime[k].area/10000).toFixed(2)} ha</span></div>`;
+      h += `<div class="stat-row"><span>${k}</span><span>${byTime[k].c} thửa · ${(byTime[k].a/10000).toFixed(2)} ha</span></div>`;
     });
-    html += `</div>`;
+    h += `</div>`;
   }
 
-  document.getElementById('stats-body').innerHTML = html;
+  h += `<div style="margin-top:14px;padding:12px;background:#fff8e1;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;font-size:12px;color:#5d4a0d;line-height:1.55">
+    <b>Lưu ý:</b> Đây là số liệu sơ bộ phân loại tự động từ dữ liệu rà soát 2019. Cần rà soát thực địa và cán bộ xã duyệt cuối để có số liệu chính thức cho phương án theo Điều 181.
+  </div>`;
+
+  // Footer Thanh Hà
+  h += `<div class="footer-thanha" style="margin-top:18px">
+    <div class="logo-th">TH</div>
+    <div class="ft">
+      <b>Đơn vị xây dựng:</b> Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà<br>
+      <b>Liên hệ:</b> Mr Tuấn — 0911 558 628
+    </div>
+  </div>`;
+
+  document.getElementById('m-stats-body').innerHTML=h;
 }
 
 // ===== EVENTS =====
-document.getElementById('btn-close-detail').addEventListener('click', ()=>{
-  document.getElementById('detail-panel').classList.remove('open');
-  selectedId = null;
-  drawLayer();
-  renderResultsList();
+document.getElementById('btn-close-d').addEventListener('click',()=>{
+  document.getElementById('detail').classList.remove('open');
+  selectedId=null; drawLayer(); renderResults();
 });
-document.getElementById('btn-save').addEventListener('click', saveEdits);
-document.getElementById('btn-zoom').addEventListener('click', ()=>{
-  if(selectedId) selectFeature(selectedId, true);
+document.getElementById('btn-save').addEventListener('click',saveEdits);
+document.getElementById('btn-zoom').addEventListener('click',()=>{ if(selectedId) selectFeature(selectedId,true); });
+document.getElementById('sb-toggle').addEventListener('click',()=>{
+  const sb=document.getElementById('sidebar');
+  sb.classList.toggle('hidden');
+  document.getElementById('sb-toggle').textContent = sb.classList.contains('hidden')?'›':'‹';
 });
-document.getElementById('sidebar-toggle').addEventListener('click', ()=>{
-  document.getElementById('sidebar').classList.toggle('hidden');
-  document.getElementById('sidebar-toggle').textContent = document.getElementById('sidebar').classList.contains('hidden')?'›':'‹';
+
+// Toast
+let toastTimer;
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className = 'toast show '+type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// Close modal on backdrop click
+document.querySelectorAll('.bd').forEach(bd=>{
+  bd.addEventListener('click',e=>{ if(e.target===bd) bd.classList.remove('open'); });
 });
 
 // ===== INIT =====
