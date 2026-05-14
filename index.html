@@ -2,498 +2,250 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Rà soát đất Công ty CP Chè Long Phú</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-:root{
-  --primary:#1b5e20;
-  --primary-dk:#0d3a11;
-  --primary-lt:#43a047;
-  --accent:#d4a017;
-  --accent-dk:#b8860b;
-  --bg:#f5f7f4;
-  --panel:#ffffff;
-  --text:#1a2520;
-  --text-mid:#5d6d63;
-  --text-mute:#90a097;
-  --border:#dde3dd;
-  --border-lt:#eef2ee;
-  --shadow:0 2px 12px rgba(13,58,17,.08);
-  --shadow-lg:0 8px 28px rgba(13,58,17,.15);
-  --r:8px;
-  /* màu nhóm đề xuất */
-  --c-da:#1565c0;
-  --c-tt:#ef6c00;
-  --c-giu:#7b1fa2;
-  --c-rs:#c62828;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--text);background:var(--bg);font-size:14px}
-
-/* ============ HEADER ============ */
-.header{
-  background:linear-gradient(135deg,var(--primary-dk) 0%,var(--primary) 60%,#2e7d32 100%);
-  color:#fff;padding:10px 18px;display:flex;align-items:center;gap:14px;
-  border-bottom:3px solid var(--accent);
-  box-shadow:0 2px 10px rgba(0,0,0,.18);position:relative;z-index:1500
-}
-.h-logo{
-  width:44px;height:44px;background:#fff;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font:700 18px Georgia,serif;color:var(--primary-dk);flex-shrink:0;
-  box-shadow:0 0 0 3px rgba(212,160,23,.4)
-}
-.h-title h1{font-size:14px;font-weight:700;line-height:1.25;letter-spacing:.2px;text-transform:uppercase}
-.h-title p{font-size:11.5px;color:rgba(255,255,255,.78);margin-top:2px}
-.h-right{margin-left:auto;display:flex;gap:18px;align-items:center}
-.h-stat{display:flex;flex-direction:column;align-items:flex-end}
-.h-stat .lbl{font-size:10.5px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.5px}
-.h-stat .val{font:700 15px/1 'Segoe UI';color:#fff}
-.h-stat .val span{color:var(--accent);font-size:12px;font-weight:500}
-
-/* ============ MENU BAR ============ */
-.menu{
-  background:#0d3a11;color:#fff;padding:0;display:flex;align-items:center;
-  border-bottom:1px solid #1b5e20;z-index:1400;position:relative
-}
-.menu button{
-  background:none;border:none;color:rgba(255,255,255,.78);
-  padding:10px 18px;font:500 12.5px 'Segoe UI';cursor:pointer;
-  border-bottom:3px solid transparent;transition:all .15s;
-  display:inline-flex;align-items:center;gap:6px
-}
-.menu button:hover{background:rgba(255,255,255,.06);color:#fff}
-.menu button.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(212,160,23,.1);font-weight:600}
-
-/* ============ APP ============ */
-.app{display:flex;height:calc(100vh - 64px - 41px);position:relative}
-
-/* ============ SIDEBAR ============ */
-.sidebar{
-  width:300px;background:var(--panel);border-right:1px solid var(--border);
-  display:flex;flex-direction:column;overflow:hidden;transition:transform .25s;flex-shrink:0
-}
-.sidebar.hidden{transform:translateX(-100%);position:absolute;height:100%;z-index:900}
-
-.sb-section{padding:13px 14px;border-bottom:1px solid var(--border-lt)}
-.sb-section h3{
-  font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;
-  letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:7px
-}
-.sb-section h3::before{
-  content:'';width:3px;height:13px;background:var(--accent);border-radius:2px
-}
-
-.cb-list{display:flex;flex-direction:column;gap:4px}
-.cb-item{
-  display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;
-  cursor:pointer;font-size:12.5px;color:var(--text);transition:background .12s
-}
-.cb-item:hover{background:#f0f5f0}
-.cb-item input[type=checkbox]{accent-color:var(--primary);width:14px;height:14px;cursor:pointer}
-.cb-item .dot{width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
-.cb-item .cnt{margin-left:auto;font-size:11px;color:var(--text-mute);background:var(--border-lt);padding:1px 8px;border-radius:10px;font-variant-numeric:tabular-nums}
-
-.sb-loai{max-height:200px;overflow-y:auto;padding-right:4px}
-.sb-loai::-webkit-scrollbar{width:6px}
-.sb-loai::-webkit-scrollbar-thumb{background:#c8d4cb;border-radius:3px}
-
-.sb-search{padding:10px 14px;background:#f9fcfa;border-bottom:1px solid var(--border-lt)}
-.sb-search input{
-  width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:5px;
-  font:13px 'Segoe UI';outline:none;background:#fff;transition:border-color .15s
-}
-.sb-search input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(27,94,32,.1)}
-
-.sb-results{flex:1;overflow-y:auto}
-.sb-results::-webkit-scrollbar{width:6px}
-.sb-results::-webkit-scrollbar-thumb{background:#c8d4cb;border-radius:3px}
-.r-item{
-  padding:9px 14px;border-bottom:1px solid var(--border-lt);cursor:pointer;
-  transition:background .12s;font-size:12.5px
-}
-.r-item:hover{background:#f0f5f0}
-.r-item.active{background:#fef7e0;border-left:3px solid var(--accent);padding-left:11px}
-.r-item .rt{font-weight:600;color:var(--text);margin-bottom:2px}
-.r-item .rs{font-size:11px;color:var(--text-mid);display:flex;justify-content:space-between}
-.r-empty{padding:24px 14px;text-align:center;color:var(--text-mute);font-size:12.5px;font-style:italic}
-
-.sb-toggle{
-  position:absolute;top:50%;transform:translateY(-50%);
-  left:300px;width:22px;height:48px;background:var(--primary-dk);color:#fff;
-  border:none;border-radius:0 6px 6px 0;cursor:pointer;z-index:800;
-  display:flex;align-items:center;justify-content:center;font-size:13px;
-  transition:left .25s;box-shadow:2px 0 6px rgba(0,0,0,.1)
-}
-.sidebar.hidden ~ .map-wrap .sb-toggle{left:0}
-
-/* ============ MAP ============ */
-.map-wrap{flex:1;position:relative;background:#dfe6ed}
-#map{height:100%;width:100%}
-
-.legend{
-  position:absolute;bottom:18px;left:14px;
-  background:rgba(255,255,255,.97);backdrop-filter:blur(6px);
-  border-radius:7px;padding:10px 13px;box-shadow:var(--shadow-lg);
-  font-size:11.5px;z-index:600;max-width:230px;border:1px solid var(--border)
-}
-.legend h4{font-size:10.5px;font-weight:700;color:var(--primary);margin-bottom:7px;text-transform:uppercase;letter-spacing:.4px}
-.l-row{display:flex;align-items:center;gap:7px;margin-bottom:3px}
-.l-col{width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,.2);flex-shrink:0}
-
-.coord-display{
-  position:absolute;bottom:18px;right:18px;
-  background:rgba(255,255,255,.95);padding:6px 11px;border-radius:5px;
-  font:11.5px monospace;color:var(--text-mid);z-index:600;
-  border:1px solid var(--border);box-shadow:var(--shadow)
-}
-
-/* ============ DETAIL PANEL ============ */
-.detail{
-  position:absolute;top:0;right:0;width:380px;height:100%;
-  background:#fff;border-left:1px solid var(--border);
-  box-shadow:-3px 0 18px rgba(0,0,0,.12);z-index:1000;
-  transform:translateX(100%);transition:transform .25s;
-  display:flex;flex-direction:column
-}
-.detail.open{transform:translateX(0)}
-.d-head{
-  background:linear-gradient(135deg,var(--primary-dk),var(--primary));
-  color:#fff;padding:13px 16px;display:flex;justify-content:space-between;align-items:flex-start
-}
-.d-head h2{font-size:15px;font-weight:700}
-.d-head .d-sub{font-size:11.5px;color:rgba(255,255,255,.78);margin-top:2px}
-.btn-x{
-  background:rgba(255,255,255,.12);border:none;color:#fff;
-  width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:18px;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  transition:background .15s
-}
-.btn-x:hover{background:rgba(255,255,255,.25)}
-
-.tab-row{display:flex;background:#f0f5f0;border-bottom:1px solid var(--border)}
-.tab-btn{
-  flex:1;padding:9px 6px;background:none;border:none;cursor:pointer;
-  font:500 12px 'Segoe UI';color:var(--text-mid);
-  border-bottom:2px solid transparent
-}
-.tab-btn.active{color:var(--primary-dk);background:#fff;border-bottom-color:var(--accent);font-weight:600}
-
-.d-body{flex:1;overflow-y:auto}
-.d-body::-webkit-scrollbar{width:6px}
-.d-body::-webkit-scrollbar-thumb{background:#c8d4cb;border-radius:3px}
-.d-sec{padding:13px 16px;border-bottom:1px solid var(--border-lt)}
-.d-sec h3{
-  font-size:10.5px;font-weight:700;color:var(--primary);
-  text-transform:uppercase;letter-spacing:.6px;margin-bottom:9px;
-  display:flex;align-items:center;gap:6px
-}
-.d-sec h3::before{
-  content:'';width:3px;height:12px;background:var(--accent);border-radius:2px
-}
-
-.attr{display:grid;grid-template-columns:120px 1fr;gap:6px 10px;font-size:12.5px}
-.attr dt{color:var(--text-mid);font-weight:500}
-.attr dd{color:var(--text);font-weight:600;word-break:break-word}
-.attr dd.muted{color:var(--text-mute);font-weight:400;font-style:italic}
-
-.pill{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-weight:600}
-.pill-da{background:#e3f2fd;color:#0d47a1}
-.pill-tt{background:#fff3e0;color:#bf360c}
-.pill-giu{background:#f3e5f5;color:#4a148c}
-.pill-rs{background:#ffebee;color:#b71c1c}
-
-.note{
-  background:#fff8e1;border-left:3px solid var(--accent);padding:8px 11px;
-  font-size:11.5px;color:#5d4a0d;border-radius:0 5px 5px 0;line-height:1.5;margin-top:8px
-}
-.note.warn{background:#ffebee;border-left-color:#c62828;color:#5d0d0d}
-
-.d-action{padding:12px 16px;background:#fafbfa;border-top:1px solid var(--border);display:flex;gap:8px}
-.btn{
-  flex:1;padding:8px 12px;border:none;border-radius:5px;cursor:pointer;
-  font:600 12px 'Segoe UI';transition:all .15s
-}
-.btn-pri{background:var(--primary);color:#fff}
-.btn-pri:hover{background:var(--primary-dk)}
-.btn-sec{background:#fff;color:var(--primary);border:1px solid var(--border)}
-.btn-sec:hover{background:var(--border-lt)}
-
-.edit-grp{display:flex;flex-direction:column;gap:10px}
-.edit-row label{display:block;font-size:10.5px;color:var(--text-mid);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
-.edit-row select,.edit-row input,.edit-row textarea{
-  width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:5px;
-  font:13px 'Segoe UI';outline:none;background:#fff
-}
-.edit-row textarea{resize:vertical;min-height:55px;font-family:inherit}
-.edit-row select:focus,.edit-row input:focus,.edit-row textarea:focus{
-  border-color:var(--primary);box-shadow:0 0 0 3px rgba(27,94,32,.1)
-}
-
-/* ============ MODAL ============ */
-.bd{
-  position:fixed;inset:0;background:rgba(13,58,17,.55);backdrop-filter:blur(3px);
-  display:none;align-items:center;justify-content:center;z-index:2000;padding:20px
-}
-.bd.open{display:flex}
-.modal{
-  background:#fff;border-radius:10px;max-width:820px;width:100%;
-  max-height:88vh;overflow:hidden;display:flex;flex-direction:column;
-  box-shadow:0 10px 40px rgba(0,0,0,.3)
-}
-.m-head{
-  padding:14px 20px;background:linear-gradient(135deg,var(--primary-dk),var(--primary));
-  color:#fff;display:flex;justify-content:space-between;align-items:center
-}
-.m-head h2{font-size:16px;font-weight:700}
-.m-body{flex:1;overflow-y:auto;padding:18px 22px}
-
-.stat-card{background:#fafbfa;border:1px solid var(--border-lt);border-radius:7px;padding:13px 15px;margin-bottom:13px}
-.stat-card h4{font-size:13px;color:var(--text);font-weight:700;margin-bottom:9px;display:flex;align-items:center;gap:7px}
-.stat-card h4 .tag{font-size:10px;font-weight:600;background:var(--accent);color:var(--primary-dk);padding:1px 7px;border-radius:9px;text-transform:uppercase;letter-spacing:.3px}
-.stat-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border-lt);font-size:12.5px;align-items:center;gap:8px}
-.stat-row:last-child{border:none;font-weight:700;color:var(--primary-dk)}
-.stat-row span:last-child{font-variant-numeric:tabular-nums;text-align:right;flex-shrink:0}
-
-.lk-form{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}
-.lk-form label{font-size:10.5px;color:var(--text-mid);font-weight:700;text-transform:uppercase;display:block;margin-bottom:3px;letter-spacing:.3px}
-.lk-form input,.lk-form select{
-  width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:5px;
-  font:13px 'Segoe UI';outline:none
-}
-.lk-form input:focus,.lk-form select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(27,94,32,.1)}
-.lk-res{max-height:380px;overflow-y:auto;border:1px solid var(--border);border-radius:6px}
-.lk-res::-webkit-scrollbar{width:6px}
-.lk-res::-webkit-scrollbar-thumb{background:#c8d4cb;border-radius:3px}
-.lk-res table{width:100%;border-collapse:collapse;font-size:12px}
-.lk-res th{background:var(--primary);color:#fff;padding:7px 9px;text-align:left;position:sticky;top:0;font-weight:600;font-size:11.5px}
-.lk-res td{padding:6px 9px;border-bottom:1px solid var(--border-lt)}
-.lk-res tr:hover{background:#fef7e0;cursor:pointer}
-
-.help h4{margin:14px 0 6px;color:var(--primary-dk);font-size:13.5px;font-weight:700}
-.help p{margin-bottom:6px;line-height:1.65;font-size:13px}
-.help ul{margin-left:18px;margin-bottom:8px}
-.help li{margin-bottom:4px;line-height:1.55}
-.help code{background:var(--border-lt);padding:1px 5px;border-radius:3px;font-size:12px;color:var(--primary-dk)}
-
-.footer-thanha{
-  background:#fafbfa;border-top:1px solid var(--border);
-  padding:14px 18px;display:flex;align-items:center;gap:14px;margin-top:16px;border-radius:8px
-}
-.footer-thanha .ft{font-size:12.5px;line-height:1.6;color:var(--text-mid)}
-.footer-thanha .ft b{color:var(--primary-dk)}
-
-/* ============ LOADING ============ */
-.loading{
-  position:absolute;inset:0;background:rgba(245,247,244,.96);
-  display:flex;align-items:center;justify-content:center;flex-direction:column;
-  z-index:1500;gap:14px
-}
-.spinner{
-  width:42px;height:42px;border:4px solid var(--border);border-top-color:var(--accent);
-  border-radius:50%;animation:spin .8s linear infinite
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-size:13px;color:var(--text-mid);font-weight:500}
-
-/* ============ TOAST ============ */
-.toast{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);
-  background:var(--primary-dk);color:#fff;padding:11px 20px;border-radius:24px;
-  font-size:13px;font-weight:500;z-index:9999;transition:transform .3s;
-  box-shadow:0 5px 20px rgba(0,0,0,.3);white-space:nowrap
-}
-.toast.show{transform:translateX(-50%) translateY(0)}
-.toast.ok{background:#2e7d32}
-.toast.err{background:#c62828}
-
-/* Logo Thanh Hà ở header */
-.h-thanha{
-  display:flex;align-items:center;gap:9px;padding:6px 12px;
-  background:rgba(255,255,255,.95);border-radius:8px;
-  border:1px solid rgba(212,160,23,.3);
-  box-shadow:0 2px 6px rgba(0,0,0,.15);margin-left:6px
-}
-.h-thanha img{height:34px;width:auto;display:block}
-.h-thanha .ht-text{display:flex;flex-direction:column;line-height:1.2}
-.h-thanha .ht-text .ht-lbl{font-size:9.5px;color:#7a8b7a;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
-.h-thanha .ht-text .ht-name{font-size:11px;color:var(--primary-dk);font-weight:700;white-space:nowrap}
-
-/* Footer Thanh Hà có logo thật */
-.footer-thanha img.ft-logo{
-  width:80px;height:auto;flex-shrink:0;
-  background:#fff;padding:4px;border-radius:8px;
-  box-shadow:0 2px 6px rgba(0,0,0,.08)
-}
-
-@media(max-width:1100px){
-  .h-thanha .ht-text{display:none}
-}
-@media(max-width:768px){
-  .sidebar{width:280px}
-  .detail{width:100%}
-  .h-right{display:none}
-  .sb-toggle{left:280px}
-  .lk-form{grid-template-columns:1fr}
-}
-</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="h-logo">LP</div>
-  <div class="h-title">
-    <h1>ỦY BAN NHÂN DÂN XÃ PHÚ CÁT</h1>
-    <p>Hệ thống rà soát đất Công ty CP Chè Long Phú • Phục vụ bàn giao và lập phương án theo Điều 181 Luật ĐĐ 2024</p>
-  </div>
-  <div class="h-right">
-    <div class="h-stat"><span class="lbl">Tổng thửa</span><span class="val" id="s-total">—</span></div>
-    <div class="h-stat"><span class="lbl">Hiển thị</span><span class="val" id="s-vis">—</span></div>
-    <div class="h-stat"><span class="lbl">Tổng DT</span><span class="val"><span id="s-area">—</span> <span>ha</span></span></div>
-    <div class="h-thanha" title="Đơn vị xây dựng: Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà">
-      <img src="logo.jpg" alt="Thanh Hà">
-      <div class="ht-text">
-        <span class="ht-lbl">Đơn vị xây dựng</span>
-        <span class="ht-name">Công ty Thanh Hà</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MENU -->
-<div class="menu">
-  <button class="active" data-menu="map">🗺️ Bản đồ</button>
-  <button data-menu="lookup">🔍 Tra cứu</button>
-  <button data-menu="stats">📊 Thống kê</button>
-  <button data-menu="help">📘 Hướng dẫn</button>
-</div>
-
-<!-- APP -->
 <div class="app">
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sb-section">
-      <h3>Đề xuất xử lý</h3>
-      <div class="cb-list" id="f-dx"></div>
+  <header class="topbar">
+    <div class="logo">LP</div>
+    <div>
+      <div class="title">Rà soát đất Công ty CP Chè Long Phú</div>
+      <div class="subtitle">UBND xã Phú Cát • Phương án theo Điều 181 Luật ĐĐ 2024</div>
     </div>
-    <div class="sb-section">
-      <h3>Phân theo xã cũ</h3>
-      <div class="cb-list" id="f-xa"></div>
-    </div>
-    <div class="sb-section">
-      <h3>Loại đất</h3>
-      <div class="cb-list sb-loai" id="f-loai"></div>
-    </div>
-    <div class="sb-search">
-      <input type="text" id="q-search" placeholder="🔍 Tìm tên chủ / số thửa...">
-    </div>
-    <div class="sb-results" id="r-list"></div>
-  </aside>
+    <div class="spacer"></div>
+    <button class="nav-btn active" data-view="map">Bản đồ</button>
+    <button class="nav-btn" data-view="table">Tra cứu</button>
+    <button class="nav-btn" data-view="dashboard">Thống kê</button>
+    <button class="nav-btn" data-view="help">Hướng dẫn</button>
+  </header>
 
-  <button class="sb-toggle" id="sb-toggle" title="Ẩn/hiện danh sách">‹</button>
-
-  <!-- MAP -->
-  <div class="map-wrap">
-    <div id="map"></div>
-
-    <div class="legend">
-      <h4>Đề xuất xử lý</h4>
-      <div class="l-row"><div class="l-col" style="background:#1565c0"></div>Đã bàn giao 2018</div>
-      <div class="l-row"><div class="l-col" style="background:#ef6c00"></div>Tiếp tục bàn giao về địa phương</div>
-      <div class="l-row"><div class="l-col" style="background:#7b1fa2"></div>Giữ lại theo PA CPH</div>
-      <div class="l-row"><div class="l-col" style="background:#c62828"></div>Cần rà soát thêm</div>
-    </div>
-
-    <div class="coord-display" id="coord-display">Di chuyển chuột để xem tọa độ</div>
-
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      <div class="loading-text">Đang tải 4.323 thửa đất...</div>
-    </div>
-  </div>
-
-  <!-- DETAIL PANEL -->
-  <aside class="detail" id="detail">
-    <div class="d-head">
-      <div>
-        <h2 id="d-title">Chi tiết thửa đất</h2>
-        <div class="d-sub" id="d-subtitle">—</div>
+  <main class="main">
+    <aside class="sidebar" id="sidebar">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="Tìm thửa, chủ SD...">
       </div>
-      <button class="btn-x" id="btn-close-d">×</button>
-    </div>
-    <div class="tab-row">
-      <button class="tab-btn active" data-tab="info">Thông tin</button>
-      <button class="tab-btn" data-tab="legal">Pháp lý</button>
-      <button class="tab-btn" data-tab="build">Công trình</button>
-      <button class="tab-btn" data-tab="files">Liên lạc/Ảnh</button>
-    </div>
-    <div class="d-body" id="d-body"></div>
-    <div class="d-action">
-      <button class="btn btn-pri" id="btn-save">💾 Lưu</button>
-      <button class="btn btn-sec" id="btn-zoom">🎯 Phóng to</button>
-    </div>
-  </aside>
-</div>
 
-<!-- MODAL: LOOKUP -->
-<div class="bd" id="m-lookup">
-  <div class="modal">
-    <div class="m-head"><h2>🔍 Tra cứu nâng cao</h2><button class="btn-x" data-close="m-lookup">×</button></div>
-    <div class="m-body">
-      <div class="lk-form">
-        <div><label>Tờ bản đồ</label><input type="number" id="lk-tbd" placeholder="1-41"></div>
-        <div><label>Số thửa</label><input type="number" id="lk-thua" placeholder="VD: 123"></div>
-        <div><label>Tên chủ sử dụng</label><input type="text" id="lk-ten" placeholder="VD: Nguyễn Văn..."></div>
-        <div><label>Xã cũ</label><select id="lk-xa"><option value="">— Tất cả —</option><option>Phú Cát</option><option>Hòa Thạch</option><option>Đông Yên</option></select></div>
-        <div><label>Diện tích từ (m²)</label><input type="number" id="lk-dtmin" placeholder="0"></div>
-        <div><label>Diện tích đến (m²)</label><input type="number" id="lk-dtmax" placeholder="VD: 1000"></div>
+      <div class="filter-group">
+        <div class="section-title">Đề xuất xử lý</div>
+        <label class="filter-row">
+          <input type="checkbox" data-filter="de_xuat" value="da_bangiao_2018" checked>
+          <span class="swatch" style="background:#BFD8EF;border:0.5px solid #1565c0"></span>
+          <span>Đã bàn giao 2018</span>
+          <span class="count" data-count="dx-da_bangiao_2018">—</span>
+        </label>
+        <label class="filter-row">
+          <input type="checkbox" data-filter="de_xuat" value="tieptuc_bangiao" checked>
+          <span class="swatch" style="background:#F5C4B3;border:0.5px solid #ef6c00"></span>
+          <span>Tiếp tục bàn giao về địa phương</span>
+          <span class="count" data-count="dx-tieptuc_bangiao">—</span>
+        </label>
+        <label class="filter-row">
+          <input type="checkbox" data-filter="de_xuat" value="giulai_cph" checked>
+          <span class="swatch" style="background:#D6B8DE;border:0.5px solid #7b1fa2"></span>
+          <span>Giữ lại theo PA CPH</span>
+          <span class="count" data-count="dx-giulai_cph">—</span>
+        </label>
+        <label class="filter-row">
+          <input type="checkbox" data-filter="de_xuat" value="rasoat_them" checked>
+          <span class="swatch" style="background:#F4B7B7;border:0.5px solid #c62828"></span>
+          <span>Cần rà soát thêm</span>
+          <span class="count" data-count="dx-rasoat_them">—</span>
+        </label>
       </div>
-      <button class="btn btn-pri" id="btn-lk-go" style="margin-bottom:12px;flex:initial;padding:9px 22px">Tra cứu</button>
-      <button class="btn btn-sec" id="btn-lk-csv" style="margin-bottom:12px;flex:initial;padding:9px 22px;margin-left:6px">⬇ Xuất CSV</button>
-      <div class="lk-res" id="lk-res"></div>
+
+      <div class="filter-group">
+        <div class="section-title">Phân theo xã cũ</div>
+        <div id="filter-xa"></div>
+      </div>
+
+      <div class="filter-group">
+        <div class="section-title">Loại đất</div>
+        <div id="filter-loai" style="max-height:200px;overflow-y:auto;padding-right:4px"></div>
+      </div>
+    </aside>
+
+    <div class="map-area" id="view-map">
+      <div id="map"></div>
+      <div class="loading" id="map-loading">Đang tải 4.323 thửa đất...</div>
+
+      <div class="map-overlay-tr">
+        <div><strong id="visible-count">—</strong> thửa hiển thị</div>
+        <div style="color:var(--text-secondary);margin-top:2px">trên tổng <strong id="total-count">—</strong></div>
+      </div>
+
+      <div class="map-overlay-bl">
+        <div style="font-weight:500;margin-bottom:4px">Chú giải đề xuất</div>
+        <div class="legend-row"><span class="swatch" style="background:#BFD8EF;border:0.5px solid #1565c0"></span>Đã bàn giao 2018</div>
+        <div class="legend-row"><span class="swatch" style="background:#F5C4B3;border:0.5px solid #ef6c00"></span>Tiếp tục bàn giao về địa phương</div>
+        <div class="legend-row"><span class="swatch" style="background:#D6B8DE;border:0.5px solid #7b1fa2"></span>Giữ lại theo PA CPH</div>
+        <div class="legend-row"><span class="swatch" style="background:#F4B7B7;border:0.5px solid #c62828"></span>Cần rà soát thêm</div>
+      </div>
+
+      <!-- Logo Thanh Hà ở góc dưới trái -->
+      <div class="thanha-footer" title="Đơn vị xây dựng: Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà">
+        <img src="logo.jpg" alt="Thanh Hà">
+        <div class="th-text">
+          <div class="th-line1">Đơn vị xây dựng</div>
+          <div class="th-line2">Công ty CP Tư vấn Ứng dụng<br>và Phát triển Công nghệ Thanh Hà</div>
+          <div class="th-line3">Mr Tuấn — 0911 558 628</div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- MODAL: STATS -->
-<div class="bd" id="m-stats">
-  <div class="modal">
-    <div class="m-head"><h2>📊 Thống kê tổng hợp</h2><button class="btn-x" data-close="m-stats">×</button></div>
-    <div class="m-body" id="m-stats-body"></div>
-  </div>
-</div>
+    <div class="view-table hidden" id="view-table">
+      <div class="table-controls">
+        <input type="text" id="table-search" placeholder="Tìm tên chủ SD..." style="flex:1;min-width:200px">
+        <select id="table-xa">
+          <option value="">Tất cả xã cũ</option>
+          <option value="Phú Cát">Phú Cát (cũ)</option>
+          <option value="Hòa Thạch">Hòa Thạch (cũ)</option>
+          <option value="Đông Yên">Đông Yên (cũ)</option>
+        </select>
+        <select id="table-dx">
+          <option value="">Tất cả đề xuất</option>
+          <option value="da_bangiao_2018">Đã bàn giao 2018</option>
+          <option value="tieptuc_bangiao">Tiếp tục bàn giao về địa phương</option>
+          <option value="giulai_cph">Giữ lại theo PA CPH</option>
+          <option value="rasoat_them">Cần rà soát thêm</option>
+        </select>
+        <button class="btn" onclick="exportFilteredCsv()">⬇ Xuất CSV</button>
+      </div>
+      <div class="thua-table" id="thua-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort="xa_cu">Xã cũ</th>
+              <th data-sort="tbd">Tờ</th>
+              <th data-sort="thua">Thửa</th>
+              <th data-sort="ten">Chủ SD</th>
+              <th data-sort="loai">Loại đất</th>
+              <th data-sort="dt" class="num">DT (m²)</th>
+              <th data-sort="dt_tt" class="num">DT thực tế</th>
+              <th data-sort="tg_khoan">Thời gian khoán</th>
+              <th data-sort="de_xuat">Đề xuất</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
 
-<!-- MODAL: HELP -->
-<div class="bd" id="m-help">
-  <div class="modal">
-    <div class="m-head"><h2>📘 Hướng dẫn sử dụng</h2><button class="btn-x" data-close="m-help">×</button></div>
-    <div class="m-body">
-      <div class="help">
-        <h4>1. Mục đích hệ thống</h4>
-        <p>Hệ thống WebGIS hỗ trợ rà soát toàn diện <b>4.323 thửa đất</b> (tổng khoảng <b>490 ha</b>) có nguồn gốc từ Công ty CP Chè Long Phú trên địa bàn 3 xã cũ: Đông Yên, Hòa Thạch, Phú Cát (nay là xã Phú Cát mới, Hà Nội), phục vụ lập phương án bàn giao và sử dụng đất theo Điều 181 Luật Đất đai 2024.</p>
-        <p>Hệ thống kế thừa kết quả đo đạc bản đồ địa chính năm 2016 và biểu rà soát hiện trạng năm 2019 (theo Báo cáo 500/BC-UBND ngày 19/8/2019 của UBND huyện Quốc Oai).</p>
+    <div class="view-dashboard hidden" id="view-dashboard">
+      <h1 style="font-size:18px;font-weight:500;margin-bottom:16px">Thống kê tổng quan</h1>
 
-        <h4>2. Bốn nhóm đề xuất xử lý</h4>
+      <div class="dashboard-grid">
+        <div class="dashboard-card">
+          <div class="label">Tổng số thửa</div>
+          <div class="value" id="stat-total">—</div>
+          <div class="delta">Theo bản đồ đo đạc 2016 (41 tờ)</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="label">Tổng diện tích</div>
+          <div class="value" id="stat-area">— ha</div>
+          <div class="delta" id="stat-area-m2">— m² đã đo đạc</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="label">Đã bàn giao 2018</div>
+          <div class="value" id="stat-da" style="color:#1565c0">— thửa</div>
+          <div class="delta" id="stat-da-ha">— ha</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="label">Tiếp tục bàn giao</div>
+          <div class="value" id="stat-tt" style="color:#ef6c00">— thửa</div>
+          <div class="delta" id="stat-tt-ha">— ha</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="label">Giữ lại theo PA CPH</div>
+          <div class="value" id="stat-gl" style="color:#7b1fa2">— thửa</div>
+          <div class="delta" id="stat-gl-ha">— ha</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="label">Cần rà soát thêm</div>
+          <div class="value" id="stat-rs" style="color:#c62828">— thửa</div>
+          <div class="delta">Chưa xác định loại đất</div>
+        </div>
+        <div class="dashboard-card">
+          <div class="label">Đã rà soát thực địa</div>
+          <div class="value" id="stat-progress">0%</div>
+          <div class="delta">Cập nhật bởi cán bộ</div>
+        </div>
+      </div>
+
+      <div class="dashboard-section">
+        <h2>Phân bổ theo xã cũ</h2>
+        <table class="simple" id="table-by-xa">
+          <thead><tr><th>Xã cũ</th><th class="num">Số thửa</th><th class="num">Diện tích (ha)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="dashboard-section">
+        <h2>Phân bổ theo loại đất</h2>
+        <table class="simple" id="table-by-loai">
+          <thead><tr><th>Loại đất</th><th>Tên</th><th class="num">Số thửa</th><th class="num">Diện tích (ha)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="dashboard-section">
+        <h2>Phân bổ theo thời gian nhận khoán (Biểu 3)</h2>
+        <table class="simple" id="table-by-time">
+          <thead><tr><th>Mốc thời gian</th><th class="num">Số thửa</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <p style="margin-top:16px;font-size:12px;color:var(--text-secondary);font-style:italic">
+        <strong>Lưu ý:</strong> Số liệu sơ bộ phân loại tự động từ dữ liệu rà soát 2019. Cần rà soát thực địa và cán bộ xã duyệt cuối để có số liệu chính thức cho phương án theo Điều 181.
+      </p>
+    </div>
+
+    <div class="view-help hidden" id="view-help">
+      <h1 style="font-size:18px;font-weight:500;margin-bottom:16px">Hướng dẫn sử dụng</h1>
+
+      <div class="help-section">
+        <h2>1. Mục đích hệ thống</h2>
+        <p>Hệ thống hỗ trợ rà soát toàn diện <strong>4.323 thửa đất</strong> (tổng <strong>490 ha</strong>) có nguồn gốc từ Công ty CP Chè Long Phú trên địa bàn 03 xã cũ: Phú Cát, Hòa Thạch, Đông Yên (nay là xã Phú Cát mới, Hà Nội), phục vụ lập phương án bàn giao và sử dụng đất theo Điều 181 Luật Đất đai 2024.</p>
+        <p>Hệ thống kế thừa kết quả đo đạc bản đồ địa chính năm 2016 (Sở TN&MT - Công ty Bình Minh, 41 tờ) và biểu rà soát 2019 (Báo cáo 500/BC-UBND ngày 19/8/2019).</p>
+      </div>
+
+      <div class="help-section">
+        <h2>2. Bốn nhóm đề xuất xử lý</h2>
         <ul>
-          <li><b style="color:#1565c0">Đã bàn giao 2018</b> — Các thửa đã bàn giao về UBND xã theo 03 biên bản tháng 5–6/2018.</li>
-          <li><b style="color:#ef6c00">Tiếp tục bàn giao về địa phương</b> — Các thửa còn lại trừ đất TSC và TMD.</li>
-          <li><b style="color:#7b1fa2">Giữ lại theo phương án CPH</b> — Đất TSC (trụ sở) và TMD (thương mại dịch vụ).</li>
-          <li><b style="color:#c62828">Cần rà soát thêm</b> — Thửa chưa xác định được loại đất hoặc chủ sử dụng.</li>
+          <li><strong style="color:#1565c0">Đã bàn giao 2018:</strong> Các thửa đã bàn giao về UBND xã theo 03 biên bản tháng 5-6/2018 (Phú Cát 30/5, Đông Yên 4/6, Hòa Thạch 6/6).</li>
+          <li><strong style="color:#ef6c00">Tiếp tục bàn giao về địa phương:</strong> Các thửa còn lại trừ đất TSC và TMD - đợt 2026.</li>
+          <li><strong style="color:#7b1fa2">Giữ lại theo PA CPH:</strong> Đất TSC (trụ sở), TMD (thương mại dịch vụ) giữ lại theo phương án CPH.</li>
+          <li><strong style="color:#c62828">Cần rà soát thêm:</strong> Thửa chưa xác định được loại đất hoặc chủ sử dụng.</li>
         </ul>
+      </div>
 
-        <h4>3. Sử dụng hệ thống</h4>
+      <div class="help-section">
+        <h2>3. Bốn nhóm pháp lý theo Biểu 3</h2>
         <ul>
-          <li><b>Bản đồ:</b> Click vào thửa để xem chi tiết. Dùng các bộ lọc bên trái để xem theo nhóm.</li>
-          <li><b>Tra cứu:</b> Tìm kiếm thửa theo nhiều tiêu chí, xuất kết quả CSV.</li>
-          <li><b>Thống kê:</b> Xem tổng quan, phân bổ theo xã/loại đất/thời gian khoán.</li>
-          <li><b>Sửa thông tin:</b> Mở chi tiết thửa → các tab Pháp lý/Công trình/Liên lạc-Ảnh. Thay đổi lưu trong trình duyệt (<code>localStorage</code>) và xuất ra file JSON để admin gộp.</li>
+          <li><strong>Đã giao khoán có hồ sơ:</strong> Có HĐ giao khoán theo NĐ 01/CP, 135/CP.</li>
+          <li><strong>Khoán trắng:</strong> Hộ sử dụng nhưng không có HĐ khoán.</li>
+          <li><strong>Lấn chiếm:</strong> Hộ lấn vào đất chè Cty CP CLP, trả về Cty.</li>
+          <li><strong>Tranh chấp:</strong> Có đơn thư khiếu nại, biên bản hòa giải chưa thành.</li>
         </ul>
+      </div>
 
-        <h4>4. Căn cứ pháp lý</h4>
+      <div class="help-section">
+        <h2>4. Sử dụng hệ thống</h2>
+        <ul>
+          <li><strong>Bản đồ:</strong> Click vào thửa để xem chi tiết. Dùng bộ lọc bên trái để xem theo nhóm.</li>
+          <li><strong>Tra cứu:</strong> Tìm kiếm theo tên chủ SD, lọc theo xã/đề xuất, xuất CSV.</li>
+          <li><strong>Thống kê:</strong> Xem tổng quan, phân bổ theo xã, loại đất, thời gian khoán.</li>
+          <li><strong>Sửa thông tin:</strong> Mở chi tiết thửa → cập nhật pháp lý, công trình, liên lạc. Lưu trong trình duyệt (localStorage).</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h2>5. Căn cứ pháp lý</h2>
         <ul>
           <li>Luật Đất đai 2024 — Điều 82, Điều 181</li>
           <li>Nghị định 102/2024/NĐ-CP — Điều 33, 35, 67–69</li>
@@ -502,631 +254,120 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,-apple-sy
           <li>Kết luận thanh tra 170/KLTT-STNMT-ĐTTr ngày 08/01/2025</li>
           <li>Báo cáo 500/BC-UBND ngày 19/8/2019 của UBND huyện Quốc Oai</li>
         </ul>
+      </div>
 
-        <h4>5. Lưu ý về phiên bản tĩnh</h4>
-        <p>Phiên bản này chạy trên GitHub Pages, không có máy chủ và CSDL tập trung. Mọi thay đổi của cán bộ rà soát được lưu cục bộ trong trình duyệt và phải xuất ra file JSON để gộp về. Phiên bản đầy đủ (có hộ dân tự kê khai online, đồng bộ giữa các cán bộ, kho ảnh thực địa) yêu cầu hạ tầng máy chủ.</p>
-
-        <h4>6. Vấn đề pháp lý còn để ngỏ</h4>
+      <div class="help-section">
+        <h2>6. Lưu ý về phiên bản tĩnh</h2>
+        <p>Phiên bản này chạy trên GitHub Pages, không có máy chủ và CSDL tập trung. Mọi thay đổi rà soát của cán bộ được lưu cục bộ trong trình duyệt và phải xuất ra file CSV/JSON để gộp về.</p>
         <p>Thông tư 07/2015/TT-BTNMT đã bị bãi bỏ bởi Thông tư 20/2024 từ 01/01/2025, hiện chưa có thông tư mới thay thế. Hệ thống chỉ phục vụ rà soát nội bộ; các phương án phải tuân thủ pháp luật hiện hành tại thời điểm trình duyệt.</p>
+      </div>
+    </div>
 
-        <div class="footer-thanha">
-          <img src="logo.jpg" alt="Thanh Hà" class="ft-logo">
-          <div class="ft">
-            <b>Đơn vị xây dựng:</b> Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà<br>
-            <b>Liên hệ:</b> Mr Tuấn — 0911 558 628
-          </div>
+    <aside class="rightbar" id="rightbar">
+      <button class="bottom-sheet-close" onclick="closeRightbarMobile()">✕</button>
+      <div id="thua-detail">
+        <div class="thua-detail-empty">
+          👆 Click vào một thửa trên bản đồ<br>để xem chi tiết
         </div>
       </div>
+    </aside>
+  </main>
+</div>
+
+<!-- Modal sửa thông tin -->
+<div class="modal-bg" id="edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="title">Cập nhật thông tin thửa <span id="edit-thua-id"></span></div>
+      <button class="close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Quan hệ pháp lý hiện tại</label>
+          <select id="edit-phap-ly">
+            <option value="">— Chưa xác định —</option>
+            <option>Sử dụng đúng mục đích</option>
+            <option>Không sử dụng</option>
+            <option>Sử dụng không đúng mục đích</option>
+            <option>Giao khoán theo NĐ 01/CP, 135/CP</option>
+            <option>Khoán trắng</option>
+            <option>Bị lấn, bị chiếm</option>
+            <option>Đang có tranh chấp</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Trạng thái kê khai</label>
+          <select id="edit-ke-khai">
+            <option value="">— Chưa kê khai —</option>
+            <option>Đã kê khai - không biến động</option>
+            <option>Đã kê khai - có biến động</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Diện tích công trình (m²)</label>
+          <input type="number" id="edit-ct-dt" placeholder="VD: 80">
+        </div>
+        <div class="form-group">
+          <label>Năm xây dựng</label>
+          <input type="number" id="edit-ct-nam" placeholder="VD: 2005">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Loại công trình</label>
+        <select id="edit-ct-loai">
+          <option value="">— Không có —</option>
+          <option>Nhà ở cấp 4</option>
+          <option>Nhà ở 1 tầng</option>
+          <option>Nhà ở 2 tầng trở lên</option>
+          <option>Nhà cấp 3 (kiên cố)</option>
+          <option>Nhà tạm</option>
+          <option>Chuồng trại</option>
+          <option>Nhà xưởng</option>
+          <option>Công trình phụ trợ</option>
+          <option>Khác</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>SĐT chủ sử dụng</label>
+          <input type="text" id="edit-sdt" placeholder="VD: 0912 345 678">
+        </div>
+        <div class="form-group">
+          <label>Người liên hệ thay (nếu có)</label>
+          <input type="text" id="edit-nguoi-lh" placeholder="Con/cháu...">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Ghi chú rà soát</label>
+        <textarea id="edit-ghi-chu" rows="3" style="resize:vertical" placeholder="Tranh chấp, lấn chiếm, mô tả công trình..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Người rà soát</label>
+          <input type="text" id="edit-nguoi-ra-soat" placeholder="Họ tên cán bộ">
+        </div>
+        <div class="form-group">
+          <label>Ngày rà soát</label>
+          <input type="date" id="edit-ngay-ra-soat">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeEditModal()">Hủy</button>
+      <button class="btn btn-primary" onclick="saveEditClassification()">💾 Lưu</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
-<script>
-// ===== CONFIG =====
-const COLORS = {
-  da_bangiao_2018:'#1565c0',
-  tieptuc_bangiao:'#ef6c00',
-  giulai_cph:'#7b1fa2',
-  rasoat_them:'#c62828'
-};
-const DX_LBL = {
-  da_bangiao_2018:'Đã bàn giao 2018',
-  tieptuc_bangiao:'Tiếp tục bàn giao về địa phương',
-  giulai_cph:'Giữ lại theo PA CPH',
-  rasoat_them:'Cần rà soát thêm'
-};
-const DX_PILL = {
-  da_bangiao_2018:'pill-da',
-  tieptuc_bangiao:'pill-tt',
-  giulai_cph:'pill-giu',
-  rasoat_them:'pill-rs'
-};
-const LD = {
-  'ONT':'Đất ở nông thôn','CLN':'Đất trồng cây lâu năm','ONT+CLN':'Đất ở + cây lâu năm',
-  'DGT':'Đất giao thông','DTL':'Đất thủy lợi','TMD':'Đất thương mại dịch vụ',
-  'RSX':'Đất rừng sản xuất','NTS':'Đất nuôi trồng thủy sản','DNL':'Đất năng lượng',
-  'TSC':'Đất trụ sở cơ quan','BCS':'Đất bằng chưa sử dụng','DGD':'Đất giáo dục',
-  'NTD':'Đất nghĩa trang, nghĩa địa','BHK':'Đất bằng hàng năm khác','DVH':'Đất văn hóa',
-  'DCH':'Đất chợ','SKC':'Đất sản xuất kinh doanh','DBV':'Đất bưu chính viễn thông',
-  'SKX':'Đất sản xuất VLXD','HNK':'Đất bằng hàng năm khác'
-};
-const PHAP_LY = ['Chưa xác định','Sử dụng đúng mục đích','Không sử dụng','Sử dụng không đúng mục đích','Cho thuê, mượn, liên doanh, liên kết, hợp tác đầu tư','Giao khoán theo NĐ 01/CP, 135/CP, khoán khác','Khoán trắng','Bị lấn, bị chiếm','Đang có tranh chấp'];
-const KE_KHAI = ['Chưa kê khai','Đã kê khai - không có biến động','Đã kê khai - có biến động'];
-const CT_LOAI = ['— Chọn —','Nhà ở cấp 4','Nhà ở 1 tầng','Nhà ở 2 tầng trở lên','Nhà cấp 3 (kiên cố)','Nhà tạm','Chuồng trại','Nhà xưởng','Công trình phụ trợ','Khác'];
-
-const LS_KEY = 'rasoat_chelongphu_v1';
-
-// ===== STATE =====
-let allData=null, geoLayer=null, map=null, selectedId=null, filtered=[], currentTab='info';
-let userEdits = {};
-try{ userEdits = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); }catch(e){ userEdits={}; }
-
-// ===== MAP INIT =====
-let canvasRenderer;
-function initMap(){
-  // Canvas renderer dùng chung - tăng tốc render polygon hàng loạt
-  canvasRenderer = L.canvas({padding: 0.5, tolerance: 4});
-  map = L.map('map',{
-    preferCanvas:true,
-    renderer: canvasRenderer,
-    zoomAnimation: true,
-    fadeAnimation: false,  // tắt fade để render nhanh hơn
-    markerZoomAnimation: false
-  }).setView([20.952,105.553],14);
-  const sat = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{maxZoom:21,subdomains:['mt0','mt1','mt2','mt3'],attribution:'© Google'});
-  const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
-  const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenTopoMap',subdomains:'abc'});
-  sat.addTo(map);
-  L.control.layers({'Vệ tinh':sat,'Đường phố':street,'Địa hình':topo},null,{position:'topright'}).addTo(map);
-  // Coord display - throttle để khỏi lag
-  let coordThrottle;
-  map.on('mousemove', e=>{
-    if(coordThrottle) return;
-    coordThrottle = setTimeout(()=>{ coordThrottle = null; }, 80);
-    document.getElementById('coord-display').textContent = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
-  });
-}
-
-function styleFor(p){
-  const c = COLORS[p.de_xuat] || '#95a5a6';
-  let fo = 0.5;
-  if(p.loai==='ONT'||p.loai==='ONT+CLN') fo=0.65;
-  else if(p.loai==='CLN') fo=0.38;
-  return {fillColor:c,color:'#222',weight:0.4,fillOpacity:fo,opacity:0.75};
-}
-const HL_STYLE = {weight:3,color:'#ffd966',fillOpacity:0.85,opacity:1};
-
-// ===== LOAD =====
-async function loadData(){
-  const loadingEl = document.getElementById('loading');
-  const loadingText = loadingEl.querySelector('.loading-text');
-
-  // Thử tải từ cùng folder trước, fallback sang data/
-  let res, url;
-  for(const u of ['diachinh.geojson','data/diachinh.geojson']){
-    try{
-      res = await fetch(u);
-      if(res.ok){ url=u; break; }
-    }catch(e){}
-  }
-  if(!res || !res.ok){
-    loadingEl.innerHTML = `
-      <div style="color:#b71c1c;text-align:center;padding:20px;max-width:500px">
-        <strong style="font-size:15px">Lỗi tải dữ liệu</strong><br>
-        <small style="display:block;margin-top:8px;color:#555">Không tìm thấy file <code>diachinh.geojson</code></small>
-        <small style="display:block;margin-top:6px;color:#777;line-height:1.5">
-          Đảm bảo file <code>diachinh.geojson</code> được đặt cùng thư mục với <code>index.html</code>,<br>
-          hoặc trong thư mục con <code>data/</code>.
-        </small>
-      </div>`;
-    return;
-  }
-
-  // Hiển thị progress khi tải
-  if(loadingText) loadingText.textContent = 'Đang tải dữ liệu địa chính...';
-
-  // Đọc với progress nếu có Content-Length
-  const contentLength = +res.headers.get('Content-Length');
-  if(contentLength && res.body && res.body.getReader){
-    try{
-      const reader = res.body.getReader();
-      let received = 0;
-      const chunks = [];
-      while(true){
-        const {done, value} = await reader.read();
-        if(done) break;
-        chunks.push(value);
-        received += value.length;
-        const pct = Math.round(received / contentLength * 100);
-        if(loadingText) loadingText.textContent = `Đang tải dữ liệu... ${pct}%`;
-      }
-      const blob = new Blob(chunks);
-      const text = await blob.text();
-      allData = JSON.parse(text);
-    }catch(e){
-      // Fallback nếu reader fail
-      allData = await (await fetch(url)).json();
-    }
-  } else {
-    allData = await res.json();
-  }
-
-  if(loadingText) loadingText.textContent = 'Đang dựng bản đồ...';
-  // Cho UI cập nhật trước khi render
-  await new Promise(r=>setTimeout(r,30));
-
-  buildFilters();
-  initStatChips();
-  // Ẩn loading TRƯỚC khi render layer - người dùng thấy map ngay
-  loadingEl.style.display='none';
-  toast(`Đã tải ${allData.features.length.toLocaleString('vi-VN')} thửa đất`,'ok');
-  // Render layer bất đồng bộ
-  await new Promise(r=>setTimeout(r,10));
-  applyFilters();
-}
-
-function renderAll(){
-  buildFilters();
-  applyFilters();
-  initStatChips();
-}
-
-function initStatChips(){
-  document.getElementById('s-total').textContent = allData.features.length.toLocaleString('vi-VN');
-  const totalArea = allData.features.reduce((s,f)=>s+(f.properties.dt||0),0)/10000;
-  document.getElementById('s-area').textContent = totalArea.toFixed(2);
-}
-
-function buildFilters(){
-  const dx={}, xa={}, loai={};
-  for(const f of allData.features){
-    const p=f.properties;
-    dx[p.de_xuat]=(dx[p.de_xuat]||0)+1;
-    xa[p.xa_cu]=(xa[p.xa_cu]||0)+1;
-    const lk=p.loai||'(trống)';
-    loai[lk]=(loai[lk]||0)+1;
-  }
-  const dxEl=document.getElementById('f-dx'); dxEl.innerHTML='';
-  ['da_bangiao_2018','tieptuc_bangiao','giulai_cph','rasoat_them'].forEach(k=>{
-    if(!dx[k]) return;
-    dxEl.innerHTML += `<label class="cb-item">
-      <input type="checkbox" data-f="de_xuat" value="${k}" checked>
-      <span class="dot" style="background:${COLORS[k]}"></span>
-      <span>${DX_LBL[k]}</span><span class="cnt">${dx[k]}</span>
-    </label>`;
-  });
-  const xaEl=document.getElementById('f-xa'); xaEl.innerHTML='';
-  ['Phú Cát','Hòa Thạch','Đông Yên'].forEach(k=>{
-    if(!xa[k]) return;
-    xaEl.innerHTML += `<label class="cb-item">
-      <input type="checkbox" data-f="xa_cu" value="${k}" checked>
-      <span>Xã ${k} (cũ)</span><span class="cnt">${xa[k]}</span>
-    </label>`;
-  });
-  const loaiEl=document.getElementById('f-loai'); loaiEl.innerHTML='';
-  Object.entries(loai).sort((a,b)=>b[1]-a[1]).forEach(([k,c])=>{
-    const name = LD[k] || k;
-    loaiEl.innerHTML += `<label class="cb-item">
-      <input type="checkbox" data-f="loai" value="${k}" checked>
-      <span style="font-size:12px">${k} <span style="color:var(--text-mute)">— ${name}</span></span>
-      <span class="cnt">${c}</span>
-    </label>`;
-  });
-  document.querySelectorAll('[data-f]').forEach(cb=>cb.addEventListener('change',applyFilters));
-  document.getElementById('q-search').addEventListener('input',applyFilters);
-}
-
-function selVals(f){
-  return Array.from(document.querySelectorAll(`[data-f="${f}"]:checked`)).map(c=>c.value);
-}
-
-function applyFilters(){
-  const dx=new Set(selVals('de_xuat')), xa=new Set(selVals('xa_cu')), loai=new Set(selVals('loai'));
-  const q=(document.getElementById('q-search').value||'').trim().toLowerCase();
-  filtered = allData.features.filter(f=>{
-    const p=f.properties;
-    if(!dx.has(p.de_xuat)) return false;
-    if(!xa.has(p.xa_cu)) return false;
-    if(!loai.has(p.loai||'(trống)')) return false;
-    if(q){
-      const hay=((p.ten||'')+' '+p.tbd+'-'+p.thua).toLowerCase();
-      if(!hay.includes(q)) return false;
-    }
-    return true;
-  });
-  drawLayer();
-  renderResults();
-  document.getElementById('s-vis').textContent = filtered.length.toLocaleString('vi-VN');
-}
-
-// Tooltip dùng chung - tránh tạo 4323 tooltip instance
-let sharedTooltip = null;
-function showQuickTooltip(layer, p){
-  if(!sharedTooltip){
-    sharedTooltip = L.tooltip({sticky:true, direction:'top', opacity:0.92});
-  }
-  sharedTooltip.setContent(`<b>${p.tbd}-${p.thua}</b><br>${p.ten||''}`);
-  layer.bindTooltip(sharedTooltip).openTooltip();
-}
-
-function drawLayer(){
-  if(geoLayer) map.removeLayer(geoLayer);
-  geoLayer = L.geoJSON({type:'FeatureCollection',features:filtered},{
-    renderer: canvasRenderer,
-    style: f=>styleFor(f.properties),
-    onEachFeature:(f,layer)=>{
-      const p=f.properties;
-      layer.on({
-        click:()=>selectFeature(p.id),
-        mouseover:()=>{
-          if(p.id!==selectedId) layer.setStyle({weight:1.5,color:'#fff'});
-          showQuickTooltip(layer, p);
-        },
-        mouseout:()=>{ if(p.id!==selectedId) layer.setStyle(styleFor(p)); }
-      });
-    }
-  }).addTo(map);
-
-  // Lần đầu tiên - zoom vào vùng có dữ liệu
-  if(!window._mapFitDone && filtered.length > 0){
-    try{
-      map.fitBounds(geoLayer.getBounds(), {padding:[20,20], maxZoom:15});
-      window._mapFitDone = true;
-    }catch(e){}
-  }
-}
-
-function renderResults(){
-  const list=document.getElementById('r-list');
-  if(filtered.length===0){
-    list.innerHTML='<div class="r-empty">Không có thửa nào khớp bộ lọc</div>';
-    return;
-  }
-  const slice=filtered.slice(0,200);
-  list.innerHTML = slice.map(f=>{
-    const p=f.properties;
-    return `<div class="r-item${selectedId===p.id?' active':''}" data-id="${p.id}">
-      <div class="rt">Tờ ${p.tbd} — Thửa ${p.thua}</div>
-      <div class="rs"><span>${(p.ten||'(không có)').slice(0,32)}</span><span>${p.dt} m²</span></div>
-    </div>`;
-  }).join('');
-  if(filtered.length>200){
-    list.innerHTML += `<div class="r-empty">+ ${filtered.length-200} thửa khác. Dùng "Tra cứu" để xem đầy đủ.</div>`;
-  }
-  list.querySelectorAll('.r-item').forEach(el=>el.addEventListener('click',()=>selectFeature(el.dataset.id)));
-}
-
-function findFeature(id){ return allData.features.find(f=>f.properties.id===id); }
-
-function selectFeature(id, zoom=false){
-  selectedId=id;
-  const f=findFeature(id); if(!f) return;
-  renderResults();
-  drawLayer();
-  geoLayer.eachLayer(l=>{
-    if(l.feature && l.feature.properties.id===id){
-      l.setStyle(HL_STYLE); l.bringToFront();
-      if(zoom) map.fitBounds(l.getBounds(),{maxZoom:19,padding:[40,40]});
-    }
-  });
-  showDetail(f);
-}
-
-function showDetail(f){
-  const p=f.properties;
-  document.getElementById('d-title').textContent = `Tờ ${p.tbd} — Thửa ${p.thua}`;
-  document.getElementById('d-subtitle').textContent = `Xã ${p.xa_cu} (cũ) · ${LD[p.loai]||p.loai||'—'} · ${p.dt} m²`;
-  renderTab(currentTab, p);
-  document.getElementById('detail').classList.add('open');
-}
-
-function renderTab(tab,p){
-  currentTab=tab;
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
-  const body=document.getElementById('d-body');
-  const e=userEdits[p.id]||{};
-
-  if(tab==='info'){
-    body.innerHTML = `
-      <div class="d-sec">
-        <h3>Thông tin cơ bản</h3>
-        <dl class="attr">
-          <dt>Tờ bản đồ</dt><dd>${p.tbd}</dd>
-          <dt>Số thửa</dt><dd>${p.thua}</dd>
-          <dt>Xã cũ</dt><dd>${p.xa_cu}</dd>
-          <dt>Tên chủ sử dụng</dt><dd ${p.ten?'':'class="muted"'}>${p.ten||'(chưa xác định)'}</dd>
-          <dt>Diện tích bản đồ</dt><dd>${p.dt} m²</dd>
-          <dt>Loại đất</dt><dd>${p.loai||'(trống)'} ${p.loai && LD[p.loai]?`— ${LD[p.loai]}`:''}</dd>
-          <dt>Đã cấp GCN</dt><dd>${p.cap_gcn?'✓ Đã cấp':'Chưa cấp'}</dd>
-          <dt>Đề xuất xử lý</dt><dd><span class="pill ${DX_PILL[p.de_xuat]}">${DX_LBL[p.de_xuat]}</span></dd>
-        </dl>
-      </div>
-      ${p.b3 ? `
-      <div class="d-sec">
-        <h3>Hồ sơ rà soát 2019 (Biểu 3)</h3>
-        <dl class="attr">
-          <dt>Thời gian khoán</dt><dd ${p.tg_khoan?'':'class="muted"'}>${p.tg_khoan||'(chưa rõ)'}</dd>
-          <dt>DT giao khoán</dt><dd>${p.dt_gk?p.dt_gk+' m²':'(không có)'}</dd>
-          <dt>- Đất ở</dt><dd>${p.dt_o_gk?p.dt_o_gk+' m²':'—'}</dd>
-          <dt>- Cây lâu năm</dt><dd>${p.dt_cln_gk?p.dt_cln_gk+' m²':'—'}</dd>
-          <dt>DT thực tế 2018</dt><dd>${p.dt_tt?p.dt_tt+' m²':'—'}</dd>
-          <dt>DT bàn giao 2018</dt><dd>${p.dt_bg?p.dt_bg+' m²':'—'}</dd>
-          <dt>Ghi chú gốc</dt><dd ${p.nn?'':'class="muted"'}>${p.nn||'(không có)'}</dd>
-        </dl>
-        ${p.dt_tt && Math.abs(p.dt_tt - p.dt) > 100 ? `
-        <div class="note warn">⚠️ <b>Cảnh báo chênh lệch:</b> DT thực tế (Biểu 3) chênh DT bản đồ (SMK): <b>${(p.dt_tt - p.dt).toFixed(1)} m²</b> — cần kiểm tra thực địa.</div>` : ''}
-      </div>` : `
-      <div class="d-sec">
-        <div class="note">ℹ️ Thửa này KHÔNG có trong Biểu 3 (rà soát 2019). Có thể thuộc nhóm đất Cty giữ lại, đất giao thông, thủy lợi, đất công cộng — hoặc cần rà soát bổ sung.</div>
-      </div>`}
-    `;
-  }
-  else if(tab==='legal'){
-    body.innerHTML = `
-      <div class="d-sec">
-        <h3>Quan hệ pháp lý hiện tại</h3>
-        <div class="edit-grp">
-          <div class="edit-row">
-            <label>Tình hình sử dụng</label>
-            <select id="ed-phap_ly">${PHAP_LY.map(o=>`<option ${e.phap_ly===o?'selected':''}>${o}</option>`).join('')}</select>
-          </div>
-          <div class="edit-row">
-            <label>Trạng thái kê khai</label>
-            <select id="ed-ke_khai">${KE_KHAI.map(o=>`<option ${e.ke_khai===o?'selected':''}>${o}</option>`).join('')}</select>
-          </div>
-          <div class="edit-row">
-            <label>Ghi chú pháp lý</label>
-            <textarea id="ed-ghi_chu" placeholder="Tranh chấp, lấn chiếm, hợp đồng giao khoán...">${e.ghi_chu||''}</textarea>
-          </div>
-        </div>
-        <div class="note">Căn cứ Điều 181 Luật Đất đai 2024 và Nghị định 102/2024/NĐ-CP để phân loại.</div>
-      </div>
-    `;
-  }
-  else if(tab==='build'){
-    body.innerHTML = `
-      <div class="d-sec">
-        <h3>Công trình xây dựng trên đất</h3>
-        <div class="edit-grp">
-          <div class="edit-row">
-            <label>Diện tích công trình (m²)</label>
-            <input type="number" id="ed-ct_dt" value="${e.ct_dt||''}" placeholder="VD: 80">
-          </div>
-          <div class="edit-row">
-            <label>Năm xây dựng</label>
-            <input type="number" id="ed-ct_nam" value="${e.ct_nam||''}" placeholder="VD: 2005">
-          </div>
-          <div class="edit-row">
-            <label>Loại công trình</label>
-            <select id="ed-ct_loai">${CT_LOAI.map(o=>`<option ${e.ct_loai===o?'selected':''}>${o}</option>`).join('')}</select>
-          </div>
-          <div class="edit-row">
-            <label>Mô tả công trình</label>
-            <textarea id="ed-ct_mota" placeholder="VD: Nhà mái ngói, móng gạch, có hệ thống cấp thoát nước...">${e.ct_mota||''}</textarea>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-  else if(tab==='files'){
-    body.innerHTML = `
-      <div class="d-sec">
-        <h3>Liên lạc chủ sử dụng</h3>
-        <div class="edit-grp">
-          <div class="edit-row">
-            <label>Số điện thoại</label>
-            <input type="text" id="ed-sdt" value="${e.sdt||''}" placeholder="VD: 0912 345 678">
-          </div>
-          <div class="edit-row">
-            <label>Địa chỉ liên hệ</label>
-            <input type="text" id="ed-diachi" value="${e.diachi||''}" placeholder="VD: Thôn X, xã Phú Cát">
-          </div>
-          <div class="edit-row">
-            <label>Người liên hệ thay (nếu có)</label>
-            <input type="text" id="ed-nguoi_lh" value="${e.nguoi_lh||''}" placeholder="VD: Con/cháu...">
-          </div>
-        </div>
-        <div class="note" style="margin-top:14px">
-          📷 <b>Đính kèm ảnh:</b> Phiên bản tĩnh này chưa hỗ trợ upload ảnh trực tiếp. Phiên bản tích hợp Firebase Storage / server riêng sẽ cho phép upload ảnh thửa đất, ảnh giấy tờ, ảnh hiện trạng. Đề xuất tích hợp khi triển khai chính thức.
-        </div>
-      </div>
-    `;
-  }
-}
-
-function saveEdits(){
-  if(!selectedId) return;
-  const e=userEdits[selectedId]||{};
-  ['phap_ly','ke_khai','ghi_chu','ct_dt','ct_nam','ct_loai','ct_mota','sdt','diachi','nguoi_lh'].forEach(k=>{
-    const el=document.getElementById('ed-'+k);
-    if(el) e[k]=el.value;
-  });
-  userEdits[selectedId]=e;
-  try{ localStorage.setItem(LS_KEY, JSON.stringify(userEdits)); toast('Đã lưu vào trình duyệt','ok'); }
-  catch(err){ toast('Lỗi lưu localStorage: '+err.message,'err'); }
-}
-
-document.querySelectorAll('.tab-btn').forEach(b=>{
-  b.addEventListener('click',()=>{
-    if(!selectedId) return;
-    const f=findFeature(selectedId);
-    if(f) renderTab(b.dataset.tab,f.properties);
-  });
-});
-
-// ===== MENU =====
-document.querySelectorAll('.menu button').forEach(b=>{
-  b.addEventListener('click',()=>{
-    const m=b.dataset.menu;
-    if(m==='map') document.querySelectorAll('.menu button').forEach(x=>x.classList.toggle('active',x===b));
-    else if(m==='lookup') openM('m-lookup');
-    else if(m==='stats'){ buildStats(); openM('m-stats'); }
-    else if(m==='help') openM('m-help');
-  });
-});
-function openM(id){ document.getElementById(id).classList.add('open'); }
-function closeM(id){ document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>closeM(b.dataset.close)));
-
-// ===== LOOKUP =====
-let lookupResults=[];
-document.getElementById('btn-lk-go').addEventListener('click',()=>{
-  const tbd=document.getElementById('lk-tbd').value;
-  const thua=document.getElementById('lk-thua').value;
-  const ten=document.getElementById('lk-ten').value.trim().toLowerCase();
-  const xa=document.getElementById('lk-xa').value;
-  const dtmin=parseFloat(document.getElementById('lk-dtmin').value)||0;
-  const dtmax=parseFloat(document.getElementById('lk-dtmax').value)||Infinity;
-  lookupResults = allData.features.filter(f=>{
-    const p=f.properties;
-    if(tbd && p.tbd!=parseInt(tbd)) return false;
-    if(thua && p.thua!=parseInt(thua)) return false;
-    if(ten && !(p.ten||'').toLowerCase().includes(ten)) return false;
-    if(xa && p.xa_cu!==xa) return false;
-    if(p.dt<dtmin || p.dt>dtmax) return false;
-    return true;
-  });
-  renderLookupResults();
-});
-function renderLookupResults(){
-  const div=document.getElementById('lk-res');
-  if(lookupResults.length===0){
-    div.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-mute)">Không có kết quả</div>';
-    return;
-  }
-  div.innerHTML = `<table>
-    <thead><tr><th>Tờ</th><th>Thửa</th><th>Tên chủ</th><th>Loại</th><th>DT (m²)</th><th>Xã cũ</th><th>Đề xuất</th></tr></thead>
-    <tbody>${lookupResults.slice(0,500).map(f=>{
-      const p=f.properties;
-      return `<tr data-id="${p.id}"><td>${p.tbd}</td><td>${p.thua}</td><td>${p.ten||'—'}</td><td>${p.loai||''}</td><td>${p.dt}</td><td>${p.xa_cu}</td><td><span class="pill ${DX_PILL[p.de_xuat]}">${DX_LBL[p.de_xuat]}</span></td></tr>`;
-    }).join('')}</tbody></table>
-    ${lookupResults.length>500?`<div style="padding:8px;text-align:center;color:var(--text-mute);font-size:11.5px">Hiển thị 500/${lookupResults.length} kết quả. Lọc thêm để thu hẹp.</div>`:''}`;
-  div.querySelectorAll('tr[data-id]').forEach(tr=>{
-    tr.addEventListener('click',()=>{ closeM('m-lookup'); selectFeature(tr.dataset.id,true); });
-  });
-}
-document.getElementById('btn-lk-csv').addEventListener('click',()=>{
-  if(!lookupResults.length){ toast('Chưa có kết quả tra cứu','err'); return; }
-  const headers=['Tờ BĐ','Thửa','Tên chủ SD','Loại đất','DT (m²)','Xã cũ','DT thực tế','DT bàn giao','Thời gian khoán','Đề xuất xử lý'];
-  const rows=lookupResults.map(f=>{
-    const p=f.properties;
-    return [p.tbd,p.thua,(p.ten||'').replace(/"/g,'""'),p.loai||'',p.dt,p.xa_cu,p.dt_tt||'',p.dt_bg||'',(p.tg_khoan||'').replace(/"/g,'""'),DX_LBL[p.de_xuat]];
-  });
-  const csv = '\uFEFF'+headers.join(',')+'\n'+rows.map(r=>r.map(v=>typeof v==='string'&&v.includes(',')?`"${v}"`:v).join(',')).join('\n');
-  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`tracuu_chelongphu_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-  toast('Đã tải xuống CSV','ok');
-});
-
-// ===== STATS =====
-function buildStats(){
-  const fs=allData.features;
-  const byDx={},byXa={},byLoai={},byTime={};
-  let total=0;
-  for(const f of fs){
-    const p=f.properties, dt=p.dt||0; total+=dt;
-    byDx[p.de_xuat]=byDx[p.de_xuat]||{c:0,a:0}; byDx[p.de_xuat].c++; byDx[p.de_xuat].a+=dt;
-    byXa[p.xa_cu]=byXa[p.xa_cu]||{c:0,a:0}; byXa[p.xa_cu].c++; byXa[p.xa_cu].a+=dt;
-    const lk=p.loai||'(trống)';
-    byLoai[lk]=byLoai[lk]||{c:0,a:0}; byLoai[lk].c++; byLoai[lk].a+=dt;
-    if(p.tg_khoan){
-      byTime[p.tg_khoan]=byTime[p.tg_khoan]||{c:0,a:0};
-      byTime[p.tg_khoan].c++; byTime[p.tg_khoan].a+=(p.dt_bg||p.dt_tt||dt);
-    }
-  }
-  // Đếm tiến độ rà soát từ localStorage
-  let daRaSoat = Object.values(userEdits).filter(e=>e.phap_ly && e.phap_ly!=='Chưa xác định').length;
-  let progress = (daRaSoat/fs.length*100).toFixed(1);
-
-  let h = `<div class="stat-card">
-    <h4>Tổng quan <span class="tag">Toàn khu</span></h4>
-    <div class="stat-row"><span>Tổng số thửa</span><span>${fs.length.toLocaleString('vi-VN')}</span></div>
-    <div class="stat-row"><span>Tổng diện tích</span><span>${(total/10000).toFixed(2)} ha · ${total.toLocaleString('vi-VN',{maximumFractionDigits:1})} m²</span></div>
-    <div class="stat-row"><span>Số tờ bản đồ</span><span>41</span></div>
-    <div class="stat-row"><span>Đã rà soát thực địa</span><span>${daRaSoat.toLocaleString('vi-VN')} thửa (${progress}%)</span></div>
-  </div>`;
-
-  h += `<div class="stat-card"><h4>Theo đề xuất xử lý <span class="tag">đợt 2026</span></h4>`;
-  ['da_bangiao_2018','tieptuc_bangiao','giulai_cph','rasoat_them'].forEach(k=>{
-    if(!byDx[k]) return;
-    h += `<div class="stat-row"><span><span style="display:inline-block;width:11px;height:11px;background:${COLORS[k]};border-radius:2px;margin-right:6px;vertical-align:middle"></span>${DX_LBL[k]}</span><span>${byDx[k].c.toLocaleString('vi-VN')} thửa · ${(byDx[k].a/10000).toFixed(2)} ha</span></div>`;
-  });
-  h += `</div>`;
-
-  h += `<div class="stat-card"><h4>Theo xã cũ</h4>`;
-  ['Phú Cát','Hòa Thạch','Đông Yên'].forEach(k=>{
-    if(!byXa[k]) return;
-    h += `<div class="stat-row"><span>Xã ${k} (cũ)</span><span>${byXa[k].c.toLocaleString('vi-VN')} thửa · ${(byXa[k].a/10000).toFixed(2)} ha</span></div>`;
-  });
-  h += `</div>`;
-
-  h += `<div class="stat-card"><h4>Theo loại đất</h4>`;
-  Object.entries(byLoai).sort((a,b)=>b[1].c-a[1].c).forEach(([k,v])=>{
-    h += `<div class="stat-row"><span>${k} <span style="color:var(--text-mute);font-size:11.5px">— ${LD[k]||k}</span></span><span>${v.c} thửa · ${(v.a/10000).toFixed(2)} ha</span></div>`;
-  });
-  h += `</div>`;
-
-  if(Object.keys(byTime).length){
-    h += `<div class="stat-card"><h4>Theo thời gian nhận khoán <span class="tag">Biểu 3</span></h4>`;
-    ['Trước 15/10/1993','Từ 15/10/1993 đến 01/7/2004','Từ 01/7/2004 đến 04/11/2008','Từ 04/11/2008 đến 01/7/2014','Từ 01/7/2014 đến 19/8/2019','Chưa có hồ sơ'].forEach(k=>{
-      if(!byTime[k]) return;
-      h += `<div class="stat-row"><span>${k}</span><span>${byTime[k].c} thửa · ${(byTime[k].a/10000).toFixed(2)} ha</span></div>`;
-    });
-    h += `</div>`;
-  }
-
-  h += `<div style="margin-top:14px;padding:12px;background:#fff8e1;border-left:3px solid var(--accent);border-radius:0 6px 6px 0;font-size:12px;color:#5d4a0d;line-height:1.55">
-    <b>Lưu ý:</b> Đây là số liệu sơ bộ phân loại tự động từ dữ liệu rà soát 2019. Cần rà soát thực địa và cán bộ xã duyệt cuối để có số liệu chính thức cho phương án theo Điều 181.
-  </div>`;
-
-  // Footer Thanh Hà
-  h += `<div class="footer-thanha" style="margin-top:18px">
-    <img src="logo.jpg" alt="Thanh Hà" class="ft-logo">
-    <div class="ft">
-      <b>Đơn vị xây dựng:</b> Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà<br>
-      <b>Liên hệ:</b> Mr Tuấn — 0911 558 628
-    </div>
-  </div>`;
-
-  document.getElementById('m-stats-body').innerHTML=h;
-}
-
-// ===== EVENTS =====
-document.getElementById('btn-close-d').addEventListener('click',()=>{
-  document.getElementById('detail').classList.remove('open');
-  selectedId=null; drawLayer(); renderResults();
-});
-document.getElementById('btn-save').addEventListener('click',saveEdits);
-document.getElementById('btn-zoom').addEventListener('click',()=>{ if(selectedId) selectFeature(selectedId,true); });
-document.getElementById('sb-toggle').addEventListener('click',()=>{
-  const sb=document.getElementById('sidebar');
-  sb.classList.toggle('hidden');
-  document.getElementById('sb-toggle').textContent = sb.classList.contains('hidden')?'›':'‹';
-});
-
-// Toast
-let toastTimer;
-function toast(msg,type=''){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className = 'toast show '+type;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>t.classList.remove('show'),2400);
-}
-
-// Close modal on backdrop click
-document.querySelectorAll('.bd').forEach(bd=>{
-  bd.addEventListener('click',e=>{ if(e.target===bd) bd.classList.remove('open'); });
-});
-
-// ===== INIT =====
-initMap();
-loadData();
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
