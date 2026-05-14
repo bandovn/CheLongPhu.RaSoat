@@ -68,13 +68,25 @@ function effectiveProps(feature) {
  * INIT
  * ============================================================================ */
 async function init() {
+  const T0 = performance.now();
+  console.log('[INIT] Bắt đầu');
+
   loadEdits();
+
+  const t1 = performance.now();
   await loadData();
+  console.log(`[INIT] loadData: ${(performance.now()-t1).toFixed(0)}ms`);
+
+  const t2 = performance.now();
   initMap();
+  console.log(`[INIT] initMap (vẽ ${state.features.length} polygon): ${(performance.now()-t2).toFixed(0)}ms`);
+
   initFilters();
   initNav();
   initTableControls();
   renderAll();
+
+  console.log(`[INIT] TỔNG: ${(performance.now()-T0).toFixed(0)}ms`);
 }
 
 function loadEdits() {
@@ -90,6 +102,7 @@ function saveEdits() {
 }
 
 async function loadData() {
+  const t0 = performance.now();
   // Thử cả cùng folder và data/
   let res;
   for (const u of ['diachinh.geojson', 'data/diachinh.geojson']) {
@@ -100,7 +113,12 @@ async function loadData() {
       '<div style="color:var(--danger)">⚠️ Không tải được file diachinh.geojson</div>';
     return;
   }
+  console.log(`[DATA] Fetch xong: ${(performance.now()-t0).toFixed(0)}ms`);
+
+  const t1 = performance.now();
   const data = await res.json();
+  console.log(`[DATA] Parse JSON: ${(performance.now()-t1).toFixed(0)}ms (${data.features.length} features)`);
+
   state.features = data.features;
   document.getElementById('total-count').textContent = state.features.length.toLocaleString('vi-VN');
 
@@ -148,33 +166,45 @@ function initMap() {
   state.map = L.map('map', {
     zoomControl: true,
     preferCanvas: true,
+    zoomAnimation: true,
+    fadeAnimation: false,
   }).setView([20.952, 105.553], 14);
 
+  // Google satellite - nhanh hơn ArcGIS ở VN
+  const satellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+    maxZoom: 21,
+    subdomains: ['mt0','mt1','mt2','mt3'],
+    attribution: '© Google'
+  });
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap'
   });
-  const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 19,
-    attribution: '© Esri'
-  });
   satellite.addTo(state.map);
 
   L.control.layers({
-    'Ảnh vệ tinh': satellite,
+    'Vệ tinh Google': satellite,
     'OpenStreetMap': osm,
   }, {}, { position: 'topleft' }).addTo(state.map);
 
-  drawGeoJson();
+  // Ẩn loading NGAY khi map có tile - không chờ vẽ polygon
   document.getElementById('map-loading').classList.add('hidden');
+
+  // Defer vẽ polygon - cho map render xong tiles trước
+  requestAnimationFrame(() => {
+    setTimeout(() => drawGeoJson(), 50);
+  });
 }
 
 function drawGeoJson() {
   if (!state.map) return;
   if (state.geojsonLayer) state.map.removeLayer(state.geojsonLayer);
 
+  const t0 = performance.now();
   const filtered = state.features.filter(passesFilter);
+  console.log(`[DRAW] Filter: ${(performance.now()-t0).toFixed(0)}ms (${filtered.length} polygons)`);
 
+  const t1 = performance.now();
   state.geojsonLayer = L.geoJSON(filtered, {
     style: feature => {
       const p = effectiveProps(feature);
@@ -188,14 +218,9 @@ function drawGeoJson() {
     },
     onEachFeature: (feature, layer) => {
       layer.on('click', () => selectThua(feature.properties.id, layer));
-      layer.on('mouseover', e => e.target.setStyle({ weight: 2 }));
-      layer.on('mouseout', e => {
-        if (state.selectedId !== feature.properties.id) {
-          state.geojsonLayer.resetStyle(e.target);
-        }
-      });
     }
   }).addTo(state.map);
+  console.log(`[DRAW] L.geoJSON addTo: ${(performance.now()-t1).toFixed(0)}ms`);
 
   // Auto-fit lần đầu
   if (!state._fitDone && filtered.length > 0) {
