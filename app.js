@@ -85,6 +85,7 @@ async function init() {
   initNav();
   initTableControls();
   initMobileBehavior();
+  autoCollapseQhPanelOnMobile();
   renderAll();
 
   console.log(`[INIT] TỔNG: ${(performance.now()-T0).toFixed(0)}ms`);
@@ -201,6 +202,13 @@ function initMap() {
     fadeAnimation: false,
   }).setView([20.952, 105.553], 14);
 
+  // Tạo pane riêng cho QH layers - z-index THẤP hơn overlayPane mặc định (400)
+  // → QH nằm dưới thửa đất, click vẫn vào thửa đất được
+  state.map.createPane('qhPane');
+  state.map.getPane('qhPane').style.zIndex = 350;
+  // Renderer riêng cho QH pane
+  state.qhRenderer = L.canvas({ pane: 'qhPane' });
+
   // Dùng OpenStreetMap + ArcGIS giống Việt Mông (đã verify chạy được)
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -284,13 +292,34 @@ function selectThua(id, layer) {
   const feature = state.features.find(f => f.properties.id === id);
   if (!feature) return;
 
-  // Highlight
-  state.geojsonLayer.eachLayer(l => state.geojsonLayer.resetStyle(l));
+  // Nếu không truyền layer, tự tìm trong geojsonLayer hiện tại
+  // (xảy ra khi click từ bảng Tra cứu hoặc Biểu rà soát)
+  if (!layer && state.geojsonLayer) {
+    state.geojsonLayer.eachLayer(l => {
+      if (l.feature && l.feature.properties.id === id) {
+        layer = l;
+      }
+    });
+  }
+
+  // Reset style các layer khác
+  if (state.geojsonLayer) {
+    state.geojsonLayer.eachLayer(l => state.geojsonLayer.resetStyle(l));
+  }
+
+  // Highlight + zoom đến thửa được chọn
   if (layer) {
     layer.setStyle({ weight: 3, color: '#ffd966' });
     layer.bringToFront();
     state.map.fitBounds(layer.getBounds(), { padding: [60,60], maxZoom: 19 });
+  } else if (feature.geometry) {
+    // Fallback: nếu thửa bị filter ẩn, vẫn zoom đến tọa độ
+    try {
+      const tmpLayer = L.geoJSON(feature);
+      state.map.fitBounds(tmpLayer.getBounds(), { padding: [60,60], maxZoom: 19 });
+    } catch(e) {}
   }
+
   renderThuaDetail(feature);
 
   // Mobile: tự động mở rightbar
@@ -441,8 +470,26 @@ function updateCounts() {
 function initNav() {
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b===btn));
       const view = btn.dataset.view;
+
+      // Tab "Liên hệ" đặc biệt: chỉ hiện info trong rightbar, không đổi view
+      if (view === 'contact') {
+        // LUÔN chuyển về view bản đồ trước (vì rightbar chỉ có ở view map)
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'map'));
+        ['view-map','view-table','view-dashboard','view-report','view-help'].forEach(id => {
+          document.getElementById(id).classList.toggle('hidden', id !== 'view-map');
+        });
+        // Render contact vào rightbar
+        showContactInRightbar();
+        // Fix map size
+        setTimeout(()=>state.map && state.map.invalidateSize(), 50);
+        // Mở rightbar trên mobile
+        if (isMobile()) openMobileRightbar();
+        return;
+      }
+
+      // Các tab khác như cũ
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b===btn));
       ['view-map','view-table','view-dashboard','view-report','view-help'].forEach(id => {
         document.getElementById(id).classList.toggle('hidden', id !== 'view-'+view);
       });
@@ -453,6 +500,80 @@ function initNav() {
       if (view === 'map' && state.map) setTimeout(()=>state.map.invalidateSize(), 50);
     });
   });
+}
+
+function goToContact() {
+  const btn = document.querySelector('.nav-btn[data-view="contact"]');
+  if (btn) btn.click();
+}
+
+function showContactInRightbar() {
+  const wrap = document.getElementById('thua-detail');
+  wrap.innerHTML = `
+    <div class="contact-card">
+      <div class="contact-header">
+        <img src="logo.jpg" alt="Thanh Hà" class="contact-logo">
+        <div class="contact-header-text">
+          <div class="contact-tag">Đơn vị xây dựng hệ thống</div>
+          <h3 class="contact-name">CÔNG TY CỔ PHẦN TƯ VẤN ỨNG DỤNG VÀ PHÁT TRIỂN CÔNG NGHỆ THANH HÀ</h3>
+        </div>
+      </div>
+
+      <p class="contact-slogan">
+        Tư vấn chuyên sâu về Quản lý, sử dụng đất đai – Điều tra cơ bản đất đai – Thống kê, kiểm kê đất đai, lập bản đồ hiện trạng sử dụng đất – Quy hoạch đất đai – WebGIS – Chuyển đổi số trong quản lý đất đai.
+      </p>
+
+      <div class="contact-services">
+        <span class="contact-chip">📍 Lập phương án SDĐ</span>
+        <span class="contact-chip">🗺️ WebGIS</span>
+        <span class="contact-chip">⚖️ Pháp lý đất đai</span>
+        <span class="contact-chip">📋 Hồ sơ thủ tục</span>
+      </div>
+
+      <div class="contact-info">
+        <div class="contact-info-row">
+          <span class="contact-icon">🏢</span>
+          <div>
+            <div class="contact-label">Trụ sở chính</div>
+            <div class="contact-value">Số 267, Tằng My, xã Phúc Thịnh, TP Hà Nội</div>
+          </div>
+        </div>
+        <div class="contact-info-row">
+          <span class="contact-icon">🏬</span>
+          <div>
+            <div class="contact-label">Chi nhánh văn phòng</div>
+            <div class="contact-value">HH2D Xuân Mai Complex, P. Yên Nghĩa, TP Hà Nội</div>
+          </div>
+        </div>
+        <div class="contact-info-row">
+          <span class="contact-icon">✉️</span>
+          <div>
+            <div class="contact-label">Email</div>
+            <div class="contact-value"><a href="mailto:thanhha.dacjsc@gmail.com">thanhha.dacjsc@gmail.com</a></div>
+          </div>
+        </div>
+        <div class="contact-info-row">
+          <span class="contact-icon">📞</span>
+          <div>
+            <div class="contact-label">Điện thoại</div>
+            <div class="contact-value">
+              <a href="tel:0911558628"><strong>0911 558 628</strong></a>
+              <div class="contact-person">Ông Phạm Văn Tuấn</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-actions">
+        <a href="tel:0911558628" class="btn btn-primary contact-btn-call">📞 Gọi</a>
+        <a href="mailto:thanhha.dacjsc@gmail.com?subject=Liên hệ tư vấn từ WebGIS Long Phú" class="btn contact-btn-email">✉️ Email</a>
+      </div>
+
+      <p class="contact-note">
+        Quý cơ quan, đơn vị và đối tác có nhu cầu tư vấn rà soát đất đai, lập phương án sử dụng đất, đối chiếu quy hoạch, xây dựng WebGIS hoặc số hóa hồ sơ địa chính... vui lòng liên hệ trực tiếp để được hỗ trợ.
+      </p>
+    </div>
+  `;
 }
 
 function renderAll() {
@@ -530,10 +651,13 @@ function renderTable() {
     tr.addEventListener('click', () => {
       // Chuyển sang map view và select
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view==='map'));
-      ['view-map','view-table','view-dashboard','view-help'].forEach(id => {
+      ['view-map','view-table','view-dashboard','view-report','view-help'].forEach(id => {
         document.getElementById(id).classList.toggle('hidden', id !== 'view-map');
       });
-      setTimeout(()=>{ if (state.map) state.map.invalidateSize(); selectThua(tr.dataset.id, null); }, 60);
+      setTimeout(()=>{
+        if (state.map) state.map.invalidateSize();
+        selectThua(tr.dataset.id, null);
+      }, 120);
     });
   });
 
@@ -643,6 +767,232 @@ function renderDashboard() {
 function setStat(elCount, elHa, group) {
   document.getElementById(elCount).textContent = (group?.c || 0).toLocaleString('vi-VN') + ' thửa';
   document.getElementById(elHa).textContent = ((group?.a || 0)/10000).toFixed(2) + ' ha';
+}
+
+/* ============================================================================
+ * LỚP QUY HOẠCH (lazy-load khi user bật toggle)
+ * ============================================================================ */
+const QH_PHANKHU_COLORS = {
+  // Bảng màu chuẩn QHSDD theo TT 09/2021
+  'ONT': {fill:'#FFFFAA', stroke:'#D4A017', label:'Đất ở nông thôn'},
+  'DKV': {fill:'#FFD4B3', stroke:'#D77A2E', label:'Đất khu vực (đất ở mới)'},
+  'DGT': {fill:'#C8C8C8', stroke:'#777777', label:'Đất giao thông'},
+  'DTL': {fill:'#A4D7E1', stroke:'#3782A0', label:'Đất thủy lợi'},
+  'SON': {fill:'#B4D6F0', stroke:'#3F76B8', label:'Sông, suối, mặt nước'},
+  'MNC': {fill:'#B4D6F0', stroke:'#3F76B8', label:'Mặt nước chuyên dùng'},
+  'DGD': {fill:'#FFC8C8', stroke:'#C84545', label:'Đất giáo dục'},
+  'DYT': {fill:'#FFD0DD', stroke:'#C8569F', label:'Đất y tế'},
+  'DVH': {fill:'#E5C8E5', stroke:'#9B4A9B', label:'Đất văn hóa'},
+  'TMD': {fill:'#FFB4B4', stroke:'#C83838', label:'Đất thương mại dịch vụ'},
+  'DVO': {fill:'#FFCC99', stroke:'#CC7733', label:'Đất ở đô thị (dự kiến)'},
+  'DHT': {fill:'#D2D2D2', stroke:'#666666', label:'Đất hạ tầng kỹ thuật'},
+  'DTT': {fill:'#C8E6B4', stroke:'#5C8F3D', label:'Đất thể dục thể thao'},
+  'HH': {fill:'#E8E8E8', stroke:'#888888', label:'Đất hỗn hợp'},
+  'CCC': {fill:'#FFD6B3', stroke:'#C87A2E', label:'Đất công cộng'},
+  'CQP': {fill:'#B5C7B5', stroke:'#4F6B4F', label:'Đất quốc phòng'},
+  'DLN': {fill:'#A8D9A8', stroke:'#508B50', label:'Đất lâm nghiệp'},
+  'TIN': {fill:'#D2D2D2', stroke:'#666666', label:'Đất truyền thông'},
+  'TSC': {fill:'#E5C8E5', stroke:'#9B4A9B', label:'Đất trụ sở cơ quan'},
+};
+
+const QH_CHUNG_COLORS = {
+  'NN':  {fill:'#E5F0D5', stroke:'#7A9148', label:'Đất nông nghiệp'},
+  'NTS': {fill:'#B4D6F0', stroke:'#3F76B8', label:'Nuôi trồng thủy sản / mặt nước'},
+  'LN':  {fill:'#A8D9A8', stroke:'#508B50', label:'Đất lâm nghiệp'},
+  'DGD': {fill:'#FFC8C8', stroke:'#C84545', label:'Đất giáo dục (trường học)'},
+  'DYT': {fill:'#FFD0DD', stroke:'#C8569F', label:'Đất y tế (bệnh viện)'},
+  'CCC': {fill:'#FFD6B3', stroke:'#C87A2E', label:'Đất công cộng'},
+  'DCX': {fill:'#A8D9A8', stroke:'#508B50', label:'Đất cây xanh / cảnh quan'},
+  'TSC': {fill:'#E5C8E5', stroke:'#9B4A9B', label:'Đất cơ quan'},
+  'DDL': {fill:'#FFD4B3', stroke:'#D77A2E', label:'Đất du lịch'},
+  'DGT': {fill:'#C8C8C8', stroke:'#777777', label:'Giao thông, thủy lợi'},
+  'NTD': {fill:'#D9C8B4', stroke:'#876B4D', label:'Nghĩa trang, nghĩa địa'},
+  'TT':  {fill:'#FFE6B3', stroke:'#C8951A', label:'Đất trang trại'},
+  'ONT': {fill:'#FFFFAA', stroke:'#D4A017', label:'Đất ở / dãn dân'},
+  'TON': {fill:'#E5C8E5', stroke:'#9B4A9B', label:'Đất tôn giáo'},
+  'HT':  {fill:'#D2D2D2', stroke:'#666666', label:'Hạ tầng kỹ thuật'},
+  'KXD': {fill:'#F2F2F2', stroke:'#999999', label:'Khu vực không xây dựng'},
+  'DTH': {fill:'#FFEEAA', stroke:'#B89020', label:'Đất khác (dự kiến)'},
+  'OTHER': {fill:'#E0E0E0', stroke:'#888888', label:'Khác / chưa phân loại'},
+};
+
+// State cho QH layers
+const qhLayers = {
+  phankhu: { data: null, layer: null, opacity: 0.55, loading: false },
+  chung:   { data: null, layer: null, opacity: 0.45, loading: false },
+};
+
+async function loadQhData(key) {
+  if (qhLayers[key].data) return qhLayers[key].data;
+  if (qhLayers[key].loading) return null;
+  qhLayers[key].loading = true;
+  const fileName = key === 'phankhu' ? 'qh_phankhu.geojson' : 'qh_chung.geojson';
+  // Thử cả cùng folder và data/
+  let res, lastErr;
+  for (const u of [fileName, 'data/' + fileName]) {
+    try {
+      res = await fetch(u);
+      if (res.ok) break;
+    } catch(e) { lastErr = e; }
+  }
+  try {
+    if (!res || !res.ok) throw new Error('Không tìm thấy ' + fileName);
+    const data = await res.json();
+    qhLayers[key].data = data;
+    qhLayers[key].loading = false;
+    return data;
+  } catch(e) {
+    qhLayers[key].loading = false;
+    toast('Lỗi tải lớp quy hoạch: ' + e.message, 'err');
+    return null;
+  }
+}
+
+function qhStyle(key, props) {
+  let color;
+  if (key === 'phankhu') {
+    color = QH_PHANKHU_COLORS[props.dtsd] || QH_PHANKHU_COLORS['HH'];
+  } else {
+    color = QH_CHUNG_COLORS[props.nhom] || QH_CHUNG_COLORS['OTHER'];
+  }
+  return {
+    fillColor: color.fill,
+    color: color.stroke,
+    weight: 0.7,
+    fillOpacity: qhLayers[key].opacity,
+    opacity: Math.min(1, qhLayers[key].opacity + 0.25)
+  };
+}
+
+async function toggleQhLayer(key, checked) {
+  const subEl = document.getElementById('qh-' + key + '-count');
+  const opacityWrap = document.getElementById('qh-' + key + '-opacity-wrap');
+  const legendEl = document.getElementById('qh-' + key + '-legend');
+
+  if (!checked) {
+    // Tắt layer
+    if (qhLayers[key].layer) {
+      state.map.removeLayer(qhLayers[key].layer);
+    }
+    opacityWrap.style.display = 'none';
+    legendEl.style.display = 'none';
+    updatePaneZIndex();
+    return;
+  }
+
+  // Bật: lazy load
+  if (!qhLayers[key].data) {
+    subEl.textContent = 'Đang tải...';
+    const data = await loadQhData(key);
+    if (!data) {
+      document.getElementById('qh-' + key + '-toggle').checked = false;
+      subEl.textContent = '⚠️ Tải thất bại';
+      return;
+    }
+    subEl.textContent = `${data.features.length} đối tượng`;
+    buildQhLegend(key);
+  }
+
+  // Tạo layer nếu chưa có
+  if (!qhLayers[key].layer) {
+    const data = qhLayers[key].data;
+    qhLayers[key].layer = L.geoJSON(data, {
+      pane: 'qhPane',
+      renderer: state.qhRenderer,
+      interactive: true,
+      style: f => qhStyle(key, f.properties),
+      onEachFeature: (f, layer) => {
+        const p = f.properties;
+        let popup;
+        if (key === 'phankhu') {
+          const c = QH_PHANKHU_COLORS[p.dtsd] || {label: p.dtsd};
+          popup = `<div style="font-size:12px;line-height:1.5">
+            <strong style="color:#0F6E56">QH phân khu HL-05/06</strong><br>
+            Mã: <b>${p.dtsd}</b> — ${c.label}<br>
+            ${p.ten ? `<span style="font-size:11px;color:#666">${p.ten}</span>` : ''}
+          </div>`;
+        } else {
+          const c = QH_CHUNG_COLORS[p.nhom] || {label: 'Khác'};
+          popup = `<div style="font-size:12px;line-height:1.5">
+            <strong style="color:#0F6E56">QH chung xã</strong><br>
+            Nhóm: <b>${c.label}</b><br>
+            ${p.ten ? `<span style="font-size:11px;color:#666">${p.ten}</span>` : ''}
+          </div>`;
+        }
+        layer.bindPopup(popup);
+      }
+    });
+  }
+
+  qhLayers[key].layer.addTo(state.map);
+  updatePaneZIndex();
+
+  opacityWrap.style.display = 'flex';
+  legendEl.style.display = 'block';
+}
+
+/**
+ * Cập nhật z-index của pane QH theo trạng thái lớp:
+ * - Có ít nhất 1 lớp QH đang bật → QH trên cùng (450 > overlayPane 400)
+ *   → click vào ô QH thấy popup QH, không phải thửa đất
+ * - Tất cả QH đều tắt → QH dưới thửa đất (350)
+ *   → click ưu tiên thửa đất (như mặc định)
+ *
+ * Khi nhiều lớp QH cùng bật, lớp bật SAU sẽ nhận click trước
+ * (vì add sau trong cùng pane Canvas).
+ */
+function updatePaneZIndex() {
+  const pane = state.map.getPane('qhPane');
+  if (!pane) return;
+  const anyOn = Object.keys(qhLayers).some(k =>
+    qhLayers[k].layer && state.map.hasLayer(qhLayers[k].layer)
+  );
+  pane.style.zIndex = anyOn ? 450 : 350;
+}
+
+function setQhOpacity(key, val) {
+  qhLayers[key].opacity = (+val) / 100;
+  if (qhLayers[key].layer) {
+    qhLayers[key].layer.setStyle(f => qhStyle(key, f.properties));
+  }
+}
+
+function buildQhLegend(key) {
+  const legendEl = document.getElementById('qh-' + key + '-legend');
+  const titleHtml = `<div class="qh-legend-title">Chú giải QH ${key==='phankhu'?'phân khu':'chung'}</div>`;
+  const data = qhLayers[key].data;
+  const colors = key === 'phankhu' ? QH_PHANKHU_COLORS : QH_CHUNG_COLORS;
+  const propKey = key === 'phankhu' ? 'dtsd' : 'nhom';
+
+  // Đếm các nhóm thực tế có trong data
+  const counts = {};
+  data.features.forEach(f => {
+    const k = f.properties[propKey];
+    if (k) counts[k] = (counts[k] || 0) + 1;
+  });
+
+  const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+  const rowsHtml = sorted.map(([k, count]) => {
+    const c = colors[k] || colors['OTHER'] || colors['HH'];
+    return `<div class="qh-legend-row">
+      <span class="swatch" style="background:${c.fill};border:0.5px solid ${c.stroke}"></span>
+      <span>${k} — ${c.label} <span style="color:#999">(${count})</span></span>
+    </div>`;
+  }).join('');
+
+  legendEl.innerHTML = titleHtml + rowsHtml;
+}
+
+function toggleQhPanel() {
+  const panel = document.getElementById('qh-panel');
+  panel.classList.toggle('collapsed');
+}
+
+// Đóng panel quy hoạch mặc định trên mobile (tiết kiệm không gian)
+function autoCollapseQhPanelOnMobile() {
+  if (isMobile()) {
+    document.getElementById('qh-panel').classList.add('collapsed');
+  }
 }
 
 /* ============================================================================
@@ -840,7 +1190,7 @@ function goToThua(id) {
   setTimeout(()=>{
     if (state.map) state.map.invalidateSize();
     selectThua(id, null);
-  }, 60);
+  }, 120);
 }
 
 function deleteEdit(id) {

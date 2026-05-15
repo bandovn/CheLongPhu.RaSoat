@@ -26,6 +26,7 @@
     <button class="nav-btn" data-view="dashboard"><span class="nav-icon">📊</span><span class="nav-text">Thống kê</span></button>
     <button class="nav-btn" data-view="report"><span class="nav-icon">📋</span><span class="nav-text">Biểu rà soát</span></button>
     <button class="nav-btn" data-view="help"><span class="nav-icon">📘</span><span class="nav-text">Hướng dẫn</span></button>
+    <button class="nav-btn" data-view="contact"><span class="nav-icon">📞</span><span class="nav-text">Liên hệ</span></button>
   </header>
 
   <main class="main">
@@ -78,7 +79,7 @@
         <div class="th-text">
           <div class="th-line1">Đơn vị xây dựng</div>
           <div class="th-line2">Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà</div>
-          <div class="th-line3">📞 Mr Tuấn — 0911 558 628</div>
+          <div class="th-line3">📞 0911 558 628</div>
         </div>
       </div>
     </aside>
@@ -90,6 +91,49 @@
       <div class="map-overlay-tr">
         <div><strong id="visible-count">—</strong> thửa hiển thị</div>
         <div style="color:var(--text-secondary);margin-top:2px">trên tổng <strong id="total-count">—</strong></div>
+      </div>
+
+      <!-- Panel lớp quy hoạch (góc trên trái) -->
+      <div class="qh-panel" id="qh-panel">
+        <div class="qh-header" onclick="toggleQhPanel()">
+          <span class="qh-icon">🗂️</span>
+          <span class="qh-title">Lớp quy hoạch tham khảo</span>
+          <span class="qh-arrow" id="qh-arrow">▼</span>
+        </div>
+        <div class="qh-body" id="qh-body">
+          <label class="qh-row">
+            <input type="checkbox" id="qh-phankhu-toggle" onchange="toggleQhLayer('phankhu', this.checked)">
+            <span class="qh-label-text">
+              <span class="qh-name">Quy hoạch phân khu HL-05, HL-06</span>
+              <span class="qh-sub" id="qh-phankhu-count">— Tải lần đầu khi bật</span>
+            </span>
+          </label>
+          <div class="qh-opacity" id="qh-phankhu-opacity-wrap" style="display:none">
+            <span>Độ trong</span>
+            <input type="range" min="10" max="100" value="55" oninput="setQhOpacity('phankhu', this.value)">
+          </div>
+
+          <label class="qh-row">
+            <input type="checkbox" id="qh-chung-toggle" onchange="toggleQhLayer('chung', this.checked)">
+            <span class="qh-label-text">
+              <span class="qh-name">Quy hoạch chung xã</span>
+              <span class="qh-sub" id="qh-chung-count">— Tải lần đầu khi bật</span>
+            </span>
+          </label>
+          <div class="qh-opacity" id="qh-chung-opacity-wrap" style="display:none">
+            <span>Độ trong</span>
+            <input type="range" min="10" max="100" value="45" oninput="setQhOpacity('chung', this.value)">
+          </div>
+
+          <!-- Chú giải QH phân khu (ẩn ban đầu) -->
+          <div id="qh-phankhu-legend" class="qh-legend" style="display:none">
+            <div class="qh-legend-title">Chú giải QH phân khu</div>
+          </div>
+          <!-- Chú giải QH chung -->
+          <div id="qh-chung-legend" class="qh-legend" style="display:none">
+            <div class="qh-legend-title">Chú giải QH chung</div>
+          </div>
+        </div>
       </div>
 
       <div class="map-overlay-bl">
@@ -282,6 +326,7 @@
         <h2>4. Sử dụng hệ thống</h2>
         <ul>
           <li><strong>Bản đồ:</strong> Click vào thửa để xem chi tiết. Dùng bộ lọc bên trái để xem theo nhóm.</li>
+          <li><strong>Lớp quy hoạch:</strong> Panel "Lớp quy hoạch tham khảo" ở góc trên trái bản đồ — bật/tắt 2 lớp QH phân khu HL-05/06 và QH chung xã để đối chiếu mục đích sử dụng đất.</li>
           <li><strong>Tra cứu:</strong> Tìm kiếm theo tên chủ SD, lọc theo xã/đề xuất, xuất CSV.</li>
           <li><strong>Thống kê:</strong> Xem tổng quan, phân bổ theo xã, loại đất, thời gian khoán.</li>
           <li><strong>Sửa thông tin:</strong> Mở chi tiết thửa → cập nhật pháp lý, công trình, liên lạc. Lưu trong trình duyệt (localStorage).</li>
@@ -289,7 +334,15 @@
       </div>
 
       <div class="help-section">
-        <h2>5. Căn cứ pháp lý</h2>
+        <h2>5. Lớp quy hoạch tham khảo</h2>
+        <p><strong>Quy hoạch phân khu HL-05, HL-06</strong> (412 đối tượng): Quy hoạch phân khu chi tiết hai khu vực huyện Hoài Đức (HL-05 và HL-06), đã phân loại đất theo mã chuẩn quốc gia (ONT, DGD, DYT, TMD, DGT, SON...).</p>
+        <p><strong>Quy hoạch chung xã</strong> (855 đối tượng): Quy hoạch chung sơ bộ của xã, phân nhóm theo mục đích sử dụng (nông nghiệp, đất ở mới, công cộng, cây xanh cảnh quan...).</p>
+        <p>Cả 2 lớp đều có thể bật/tắt độc lập, điều chỉnh độ trong suốt. Click vào ô quy hoạch để xem mã/nhóm quy hoạch và nội dung gốc. Thông tin này giúp cán bộ rà soát đối chiếu hiện trạng sử dụng đất với quy hoạch, đề xuất phương án phù hợp.</p>
+        <p style="font-size:12px;color:var(--text-secondary);font-style:italic">Lưu ý: Dữ liệu quy hoạch chỉ tải khi user bật toggle (lazy load) để không làm chậm trang chính.</p>
+      </div>
+
+      <div class="help-section">
+        <h2>6. Căn cứ pháp lý</h2>
         <ul>
           <li>Luật Đất đai 2024 — Điều 82, Điều 181</li>
           <li>Nghị định 102/2024/NĐ-CP — Điều 33, 35, 67–69</li>
@@ -301,11 +354,19 @@
       </div>
 
       <div class="help-section">
-        <h2>6. Lưu ý về phiên bản tĩnh</h2>
+        <h2>7. Lưu ý về phiên bản tĩnh</h2>
         <p>Phiên bản này chạy trên GitHub Pages, không có máy chủ và CSDL tập trung. Mọi thay đổi rà soát của cán bộ được lưu cục bộ trong trình duyệt và phải xuất ra file CSV/JSON để gộp về.</p>
         <p>Thông tư 07/2015/TT-BTNMT đã bị bãi bỏ bởi Thông tư 20/2024 từ 01/01/2025, hiện chưa có thông tư mới thay thế. Hệ thống chỉ phục vụ rà soát nội bộ; các phương án phải tuân thủ pháp luật hiện hành tại thời điểm trình duyệt.</p>
       </div>
+
+      <!-- Lời mời liên hệ ngắn gọn ở cuối Hướng dẫn -->
+      <div class="help-cta">
+        <span>Cần tư vấn chuyên sâu về đất đai, quy hoạch, WebGIS?</span>
+        <button class="btn btn-primary" onclick="goToContact()">Liên hệ với chúng tôi →</button>
+      </div>
     </div>
+
+    <!-- ========== VIEW: LIÊN HỆ đã được di chuyển vào rightbar ========== -->
 
     <aside class="rightbar" id="rightbar">
       <button class="bottom-sheet-close" onclick="closeRightbarMobile()">✕</button>
