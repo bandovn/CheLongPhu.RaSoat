@@ -2,7 +2,11 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0F6E56">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rà soát LP">
 <title>Rà soát đất Công ty CP Chè Long Phú</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="style.css">
@@ -17,10 +21,11 @@
       <div class="subtitle">UBND xã Phú Cát • Phương án theo Điều 181 Luật ĐĐ 2024</div>
     </div>
     <div class="spacer"></div>
-    <button class="nav-btn active" data-view="map">Bản đồ</button>
-    <button class="nav-btn" data-view="table">Tra cứu</button>
-    <button class="nav-btn" data-view="dashboard">Thống kê</button>
-    <button class="nav-btn" data-view="help">Hướng dẫn</button>
+    <button class="nav-btn active" data-view="map"><span class="nav-icon">🗺️</span><span class="nav-text">Bản đồ</span></button>
+    <button class="nav-btn" data-view="table"><span class="nav-icon">🔍</span><span class="nav-text">Tra cứu</span></button>
+    <button class="nav-btn" data-view="dashboard"><span class="nav-icon">📊</span><span class="nav-text">Thống kê</span></button>
+    <button class="nav-btn" data-view="report"><span class="nav-icon">📋</span><span class="nav-text">Biểu rà soát</span></button>
+    <button class="nav-btn" data-view="help"><span class="nav-icon">📘</span><span class="nav-text">Hướng dẫn</span></button>
   </header>
 
   <main class="main">
@@ -66,6 +71,16 @@
         <div class="section-title">Loại đất</div>
         <div id="filter-loai" style="max-height:200px;overflow-y:auto;padding-right:4px"></div>
       </div>
+
+      <!-- Logo Thanh Hà ở dưới cùng sidebar -->
+      <div class="thanha-footer" title="Đơn vị xây dựng: Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà">
+        <img src="logo.jpg" alt="Thanh Hà">
+        <div class="th-text">
+          <div class="th-line1">Đơn vị xây dựng</div>
+          <div class="th-line2">Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà</div>
+          <div class="th-line3">📞 Mr Tuấn — 0911 558 628</div>
+        </div>
+      </div>
     </aside>
 
     <div class="map-area" id="view-map">
@@ -83,16 +98,6 @@
         <div class="legend-row"><span class="swatch" style="background:#F5C4B3;border:0.5px solid #ef6c00"></span>Tiếp tục bàn giao về địa phương</div>
         <div class="legend-row"><span class="swatch" style="background:#D6B8DE;border:0.5px solid #7b1fa2"></span>Giữ lại theo PA CPH</div>
         <div class="legend-row"><span class="swatch" style="background:#F4B7B7;border:0.5px solid #c62828"></span>Cần rà soát thêm</div>
-      </div>
-
-      <!-- Logo Thanh Hà ở góc dưới trái -->
-      <div class="thanha-footer" title="Đơn vị xây dựng: Công ty CP Tư vấn Ứng dụng và Phát triển Công nghệ Thanh Hà">
-        <img src="logo.jpg" alt="Thanh Hà">
-        <div class="th-text">
-          <div class="th-line1">Đơn vị xây dựng</div>
-          <div class="th-line2">Công ty CP Tư vấn Ứng dụng<br>và Phát triển Công nghệ Thanh Hà</div>
-          <div class="th-line3">Mr Tuấn — 0911 558 628</div>
-        </div>
       </div>
     </div>
 
@@ -205,6 +210,45 @@
       </p>
     </div>
 
+    <div class="view-report hidden" id="view-report">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <h1 style="font-size:18px;font-weight:500;margin:0">📋 Biểu tổng hợp thửa đã rà soát</h1>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="exportReportJson()">⬇ Xuất JSON (gốc)</button>
+          <button class="btn btn-primary" onclick="exportReportExcel()">📊 Xuất Excel (.xlsx)</button>
+        </div>
+      </div>
+
+      <div id="report-summary" style="background:var(--bg-panel);border:0.5px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.7">
+        <!-- Tổng kết sẽ render bằng JS -->
+      </div>
+
+      <div class="thua-table" id="report-table-wrap" style="background:var(--bg-panel);border:0.5px solid var(--border);border-radius:8px;overflow:auto;max-height:calc(100vh - 260px)">
+        <table>
+          <thead>
+            <tr>
+              <th>Tờ</th>
+              <th>Thửa</th>
+              <th>Xã cũ</th>
+              <th>Chủ SD</th>
+              <th>Loại đất</th>
+              <th class="num">DT (m²)</th>
+              <th>Đề xuất</th>
+              <th>Pháp lý</th>
+              <th>Kê khai</th>
+              <th>Công trình</th>
+              <th>SĐT</th>
+              <th>Ghi chú</th>
+              <th>Người rà soát</th>
+              <th>Ngày RS</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="report-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="view-help hidden" id="view-help">
       <h1 style="font-size:18px;font-weight:500;margin-bottom:16px">Hướng dẫn sử dụng</h1>
 
@@ -274,100 +318,116 @@
   </main>
 </div>
 
-<!-- Modal sửa thông tin -->
-<div class="modal-bg" id="edit-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="title">Cập nhật thông tin thửa <span id="edit-thua-id"></span></div>
-      <button class="close" onclick="closeEditModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group">
-          <label>Quan hệ pháp lý hiện tại</label>
-          <select id="edit-phap-ly">
-            <option value="">— Chưa xác định —</option>
-            <option>Sử dụng đúng mục đích</option>
-            <option>Không sử dụng</option>
-            <option>Sử dụng không đúng mục đích</option>
-            <option>Giao khoán theo NĐ 01/CP, 135/CP</option>
-            <option>Khoán trắng</option>
-            <option>Bị lấn, bị chiếm</option>
-            <option>Đang có tranh chấp</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Trạng thái kê khai</label>
-          <select id="edit-ke-khai">
-            <option value="">— Chưa kê khai —</option>
-            <option>Đã kê khai - không biến động</option>
-            <option>Đã kê khai - có biến động</option>
-          </select>
-        </div>
-      </div>
+<!-- Mobile FAB & backdrop -->
+<div class="mobile-backdrop" id="mobile-backdrop" onclick="closeMobilePanels()"></div>
+<button class="mobile-fab show" id="fab-filter" onclick="openMobileSidebar()" title="Bộ lọc">☰</button>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Diện tích công trình (m²)</label>
-          <input type="number" id="edit-ct-dt" placeholder="VD: 80">
-        </div>
-        <div class="form-group">
-          <label>Năm xây dựng</label>
-          <input type="number" id="edit-ct-nam" placeholder="VD: 2005">
-        </div>
-      </div>
-
+<!-- Panel cập nhật thông tin (góc dưới trái) -->
+<div class="edit-panel" id="edit-panel">
+  <div class="edit-panel-header">
+    <div class="title">✏️ Cập nhật thông tin thửa <small id="edit-thua-id"></small></div>
+    <button class="close" onclick="closeEditPanel()">✕</button>
+  </div>
+  <div class="edit-panel-body">
+    <div class="form-row">
       <div class="form-group">
-        <label>Loại công trình</label>
-        <select id="edit-ct-loai">
-          <option value="">— Không có —</option>
-          <option>Nhà ở cấp 4</option>
-          <option>Nhà ở 1 tầng</option>
-          <option>Nhà ở 2 tầng trở lên</option>
-          <option>Nhà cấp 3 (kiên cố)</option>
-          <option>Nhà tạm</option>
-          <option>Chuồng trại</option>
-          <option>Nhà xưởng</option>
-          <option>Công trình phụ trợ</option>
-          <option>Khác</option>
+        <label>Quan hệ pháp lý hiện tại</label>
+        <select id="edit-phap-ly">
+          <option value="">— Chưa xác định —</option>
+          <option>Sử dụng đúng mục đích</option>
+          <option>Không sử dụng</option>
+          <option>Sử dụng không đúng mục đích</option>
+          <option>Giao khoán theo NĐ 01/CP, 135/CP</option>
+          <option>Khoán trắng</option>
+          <option>Bị lấn, bị chiếm</option>
+          <option>Đang có tranh chấp</option>
         </select>
       </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>SĐT chủ sử dụng</label>
-          <input type="text" id="edit-sdt" placeholder="VD: 0912 345 678">
-        </div>
-        <div class="form-group">
-          <label>Người liên hệ thay (nếu có)</label>
-          <input type="text" id="edit-nguoi-lh" placeholder="Con/cháu...">
-        </div>
-      </div>
-
       <div class="form-group">
-        <label>Ghi chú rà soát</label>
-        <textarea id="edit-ghi-chu" rows="3" style="resize:vertical" placeholder="Tranh chấp, lấn chiếm, mô tả công trình..."></textarea>
+        <label>Trạng thái kê khai</label>
+        <select id="edit-ke-khai">
+          <option value="">— Chưa kê khai —</option>
+          <option>Đã kê khai - không biến động</option>
+          <option>Đã kê khai - có biến động</option>
+        </select>
       </div>
+    </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Người rà soát</label>
-          <input type="text" id="edit-nguoi-ra-soat" placeholder="Họ tên cán bộ">
-        </div>
-        <div class="form-group">
-          <label>Ngày rà soát</label>
-          <input type="date" id="edit-ngay-ra-soat">
-        </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>DT công trình (m²)</label>
+        <input type="number" id="edit-ct-dt" placeholder="VD: 80">
+      </div>
+      <div class="form-group">
+        <label>Năm xây dựng</label>
+        <input type="number" id="edit-ct-nam" placeholder="VD: 2005">
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeEditModal()">Hủy</button>
-      <button class="btn btn-primary" onclick="saveEditClassification()">💾 Lưu</button>
+
+    <div class="form-group">
+      <label>Loại công trình</label>
+      <select id="edit-ct-loai">
+        <option value="">— Không có —</option>
+        <option>Nhà ở cấp 4</option>
+        <option>Nhà ở 1 tầng</option>
+        <option>Nhà ở 2 tầng trở lên</option>
+        <option>Nhà cấp 3 (kiên cố)</option>
+        <option>Nhà tạm</option>
+        <option>Chuồng trại</option>
+        <option>Nhà xưởng</option>
+        <option>Công trình phụ trợ</option>
+        <option>Khác</option>
+      </select>
     </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>SĐT chủ sử dụng</label>
+        <input type="text" id="edit-sdt" placeholder="VD: 0912 345 678">
+      </div>
+      <div class="form-group">
+        <label>Người liên hệ thay</label>
+        <input type="text" id="edit-nguoi-lh" placeholder="Con/cháu...">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Ghi chú rà soát</label>
+      <textarea id="edit-ghi-chu" rows="2" style="resize:vertical" placeholder="Tranh chấp, lấn chiếm, mô tả công trình..."></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>📷 Ảnh hiện trạng</label>
+        <input type="file" id="edit-anh-hientrang" accept="image/*" multiple onchange="onPickImages(this,'anh_ht')" style="font-size:11px">
+        <div id="preview-anh_ht" class="img-preview-grid"></div>
+      </div>
+      <div class="form-group">
+        <label>📄 Giấy tờ pháp lý</label>
+        <input type="file" id="edit-anh-giayto" accept="image/*,application/pdf" multiple onchange="onPickImages(this,'anh_gt')" style="font-size:11px">
+        <div id="preview-anh_gt" class="img-preview-grid"></div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Người rà soát</label>
+        <input type="text" id="edit-nguoi-ra-soat" placeholder="Họ tên cán bộ">
+      </div>
+      <div class="form-group">
+        <label>Ngày rà soát</label>
+        <input type="date" id="edit-ngay-ra-soat">
+      </div>
+    </div>
+  </div>
+  <div class="edit-panel-footer">
+    <button class="btn" onclick="closeEditPanel()">Hủy</button>
+    <button class="btn btn-primary" onclick="saveEditClassification()">💾 Lưu</button>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

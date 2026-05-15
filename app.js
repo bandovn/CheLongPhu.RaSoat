@@ -84,6 +84,7 @@ async function init() {
   initFilters();
   initNav();
   initTableControls();
+  initMobileBehavior();
   renderAll();
 
   console.log(`[INIT] TỔNG: ${(performance.now()-T0).toFixed(0)}ms`);
@@ -291,6 +292,11 @@ function selectThua(id, layer) {
     state.map.fitBounds(layer.getBounds(), { padding: [60,60], maxZoom: 19 });
   }
   renderThuaDetail(feature);
+
+  // Mobile: tự động mở rightbar
+  if (isMobile()) {
+    openMobileRightbar();
+  }
 }
 
 function renderThuaDetail(feature) {
@@ -349,7 +355,7 @@ function renderThuaDetail(feature) {
     </div>
     `;
   } else {
-    html += `<div class="detail-section"><div class="warn-box" style="background:#E6F1FB;color:#185FA5;border-color:#185FA5">ℹ️ Thửa không có trong Biểu 3. Có thể là đất Cty giữ lại, đất giao thông, thủy lợi, hoặc cần rà soát bổ sung.</div></div>`;
+    html += `<div class="detail-section"><div class="warn-box" style="background:#E6F1FB;color:#185FA5;border-color:#185FA5">ℹ️ Thửa đất không nằm trong đợt bàn giao năm 2018, cần rà soát thông tin phục vụ trả lại xã tiếp nhận lập phương án.</div></div>`;
   }
 
   // Phần cập nhật của cán bộ (nếu có)
@@ -363,12 +369,32 @@ function renderThuaDetail(feature) {
     if (ed.nguoi_lh) html += `<div><div class="label">Người LH thay</div><div class="value">${ed.nguoi_lh}</div></div>`;
     if (ed.ghi_chu) html += `<div class="full"><div class="label">Ghi chú</div><div class="value">${ed.ghi_chu}</div></div>`;
     if (ed.nguoi_ra_soat) html += `<div class="full"><div class="label">Người rà soát</div><div class="value">${ed.nguoi_ra_soat}${ed.ngay_ra_soat?` (${ed.ngay_ra_soat})`:''}</div></div>`;
+    if (ed.anh_ht && ed.anh_ht.length) {
+      html += `<div class="full"><div class="label">📷 Ảnh hiện trạng (${ed.anh_ht.length})</div><div class="img-preview-grid">`;
+      ed.anh_ht.forEach((f, i) => {
+        const inner = f.type === 'application/pdf'
+          ? `<div class="pdf-icon" title="${f.name}">📄</div>`
+          : `<img src="${f.data}" alt="${f.name}" title="${f.name}">`;
+        html += `<div class="img-item" onclick="viewImage('${p.id}','anh_ht',${i})">${inner}</div>`;
+      });
+      html += `</div></div>`;
+    }
+    if (ed.anh_gt && ed.anh_gt.length) {
+      html += `<div class="full"><div class="label">📄 Giấy tờ pháp lý (${ed.anh_gt.length})</div><div class="img-preview-grid">`;
+      ed.anh_gt.forEach((f, i) => {
+        const inner = f.type === 'application/pdf'
+          ? `<div class="pdf-icon" title="${f.name}">📄</div>`
+          : `<img src="${f.data}" alt="${f.name}" title="${f.name}">`;
+        html += `<div class="img-item" onclick="viewImage('${p.id}','anh_gt',${i})">${inner}</div>`;
+      });
+      html += `</div></div>`;
+    }
     html += `</div></div>`;
   }
 
   html += `
     <div class="detail-actions">
-      <button class="btn btn-primary" onclick="openEditModal('${p.id}')">✏️ Cập nhật</button>
+      <button class="btn btn-primary" onclick="openEditPanel('${p.id}')">✏️ Cập nhật</button>
       <button class="btn" onclick="window.print()">🖨️ In phiếu</button>
     </div>
   `;
@@ -417,11 +443,12 @@ function initNav() {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b===btn));
       const view = btn.dataset.view;
-      ['view-map','view-table','view-dashboard','view-help'].forEach(id => {
+      ['view-map','view-table','view-dashboard','view-report','view-help'].forEach(id => {
         document.getElementById(id).classList.toggle('hidden', id !== 'view-'+view);
       });
       if (view === 'dashboard') renderDashboard();
       if (view === 'table') renderTable();
+      if (view === 'report') renderReport();
       // Fix map size khi quay lại
       if (view === 'map' && state.map) setTimeout(()=>state.map.invalidateSize(), 50);
     });
@@ -619,13 +646,348 @@ function setStat(elCount, elHa, group) {
 }
 
 /* ============================================================================
- * EDIT MODAL
+ * UPLOAD ẢNH - lưu dưới dạng base64 vào localStorage
+ * Giới hạn ~1MB/ảnh, resize nếu lớn hơn
+ * ============================================================================ */
+const MAX_IMG_DIM = 1280;     // resize ảnh lớn xuống max 1280px
+const MAX_IMG_BYTES = 800000; // ~800KB cho mỗi ảnh sau encode base64
+
+// Lưu file đang chọn trong panel hiện tại (sẽ commit khi bấm Lưu)
+let pendingFiles = { anh_ht: [], anh_gt: [] };
+
+async function onPickImages(input, key) {
+  const files = Array.from(input.files || []);
+  for (const file of files) {
+    try {
+      let dataUrl;
+      if (file.type === 'application/pdf') {
+        // PDF: chỉ lưu metadata, không resize
+        if (file.size > 3 * 1024 * 1024) {
+          toast(`File ${file.name} > 3MB - bỏ qua`, 'err');
+          continue;
+        }
+        dataUrl = await fileToBase64(file);
+      } else {
+        // Ảnh: resize nếu lớn
+        dataUrl = await resizeImage(file, MAX_IMG_DIM);
+      }
+      pendingFiles[key].push({
+        name: file.name,
+        type: file.type,
+        size: dataUrl.length,
+        data: dataUrl
+      });
+    } catch (e) {
+      toast('Lỗi xử lý ảnh: ' + e.message, 'err');
+    }
+  }
+  input.value = ''; // reset để chọn lại được cùng file
+  renderImagePreview(key);
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function resizeImage(file, maxDim) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim/width, maxDim/height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      // Quality tự động giảm để vừa MAX_IMG_BYTES
+      let q = 0.85;
+      let out = canvas.toDataURL('image/jpeg', q);
+      while (out.length > MAX_IMG_BYTES && q > 0.4) {
+        q -= 0.1;
+        out = canvas.toDataURL('image/jpeg', q);
+      }
+      res(out);
+    };
+    img.onerror = rej;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function renderImagePreview(key) {
+  const el = document.getElementById('preview-'+key);
+  if (!el) return;
+  el.innerHTML = pendingFiles[key].map((f, i) => {
+    const inner = f.type === 'application/pdf'
+      ? `<div class="pdf-icon" title="${f.name}">📄</div>`
+      : `<img src="${f.data}" alt="${f.name}" title="${f.name}">`;
+    return `<div class="img-item">${inner}<button class="del-btn" onclick="removeImage('${key}',${i})" title="Xóa">×</button></div>`;
+  }).join('');
+}
+
+function removeImage(key, index) {
+  pendingFiles[key].splice(index, 1);
+  renderImagePreview(key);
+}
+
+function viewImage(thuaId, key, index) {
+  const ed = state.edits[thuaId];
+  if (!ed || !ed[key] || !ed[key][index]) return;
+  const f = ed[key][index];
+  if (f.type === 'application/pdf') {
+    // Mở PDF trong tab mới
+    const w = window.open();
+    if (w) w.location = f.data;
+    return;
+  }
+  // Lightbox đơn giản
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:20px';
+  overlay.innerHTML = `<img src="${f.data}" style="max-width:95%;max-height:95%;object-fit:contain;border-radius:6px"><div style="position:absolute;top:14px;right:18px;color:white;font-size:24px;cursor:pointer">×</div>`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+}
+
+/* ============================================================================
+ * BIỂU TỔNG HỢP RÀ SOÁT + XUẤT EXCEL
+ * ============================================================================ */
+function getReportData() {
+  // Trả về danh sách các thửa đã được cập nhật (có trong state.edits)
+  return Object.entries(state.edits).map(([id, ed]) => {
+    const feat = state.features.find(f => f.properties.id === id);
+    if (!feat) return null;
+    const p = feat.properties;
+    return {
+      id, tbd: p.tbd, thua: p.thua, xa_cu: p.xa_cu, ten: p.ten || '',
+      loai: p.loai || '', dt: p.dt || 0, dt_tt: p.dt_tt || '', dt_bg: p.dt_bg || '',
+      tg_khoan: p.tg_khoan || '', de_xuat: DX_LABELS[p.de_xuat] || p.de_xuat,
+      nn: p.nn || '',
+      phap_ly: ed.phap_ly || '', ke_khai: ed.ke_khai || '',
+      ct_loai: ed.ct_loai || '', ct_dt: ed.ct_dt || '', ct_nam: ed.ct_nam || '',
+      sdt: ed.sdt || '', nguoi_lh: ed.nguoi_lh || '',
+      ghi_chu: ed.ghi_chu || '',
+      anh_ht: ed.anh_ht || [], anh_gt: ed.anh_gt || [],
+      nguoi_ra_soat: ed.nguoi_ra_soat || '', ngay_ra_soat: ed.ngay_ra_soat || ''
+    };
+  }).filter(x => x).sort((a,b) => (a.tbd - b.tbd) || (a.thua - b.thua));
+}
+
+function renderReport() {
+  const data = getReportData();
+  const summary = document.getElementById('report-summary');
+  const tbody = document.getElementById('report-table-body');
+
+  if (data.length === 0) {
+    summary.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px">Chưa có thửa nào được cập nhật. Click vào thửa trên bản đồ → Cập nhật để thêm thông tin rà soát.</div>';
+    tbody.innerHTML = '';
+    return;
+  }
+
+  // Tổng kết
+  const byPhapLy = {}, byKeKhai = {}, byNguoi = {};
+  let tongDT = 0;
+  data.forEach(d => {
+    tongDT += +d.dt || 0;
+    if (d.phap_ly) byPhapLy[d.phap_ly] = (byPhapLy[d.phap_ly]||0) + 1;
+    if (d.ke_khai) byKeKhai[d.ke_khai] = (byKeKhai[d.ke_khai]||0) + 1;
+    if (d.nguoi_ra_soat) byNguoi[d.nguoi_ra_soat] = (byNguoi[d.nguoi_ra_soat]||0) + 1;
+  });
+
+  summary.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:10px">
+      <div><strong>Tổng số thửa đã rà soát:</strong> ${data.length.toLocaleString('vi-VN')} / ${state.features.length.toLocaleString('vi-VN')} (${(data.length/state.features.length*100).toFixed(1)}%)</div>
+      <div><strong>Tổng diện tích:</strong> ${(tongDT/10000).toFixed(2)} ha</div>
+      <div><strong>Số cán bộ tham gia:</strong> ${Object.keys(byNguoi).length}</div>
+    </div>
+    ${Object.keys(byPhapLy).length ? `<div style="font-size:12px;color:var(--text-secondary);margin-top:6px"><strong>Phân loại pháp lý:</strong> ${Object.entries(byPhapLy).map(([k,v])=>`${k} (${v})`).join(' • ')}</div>` : ''}
+    ${Object.keys(byKeKhai).length ? `<div style="font-size:12px;color:var(--text-secondary);margin-top:4px"><strong>Trạng thái kê khai:</strong> ${Object.entries(byKeKhai).map(([k,v])=>`${k} (${v})`).join(' • ')}</div>` : ''}
+  `;
+
+  tbody.innerHTML = data.map(d => {
+    const ctText = d.ct_loai ? `${d.ct_loai}${d.ct_dt?` (${d.ct_dt}m²)`:''}${d.ct_nam?`, ${d.ct_nam}`:''}` : '';
+    return `<tr>
+      <td>${d.tbd}</td>
+      <td>${d.thua}</td>
+      <td>${d.xa_cu}</td>
+      <td>${d.ten}</td>
+      <td>${d.loai}</td>
+      <td class="num">${d.dt.toLocaleString('vi-VN')}</td>
+      <td>${d.de_xuat}</td>
+      <td>${d.phap_ly}</td>
+      <td>${d.ke_khai}</td>
+      <td>${ctText}</td>
+      <td>${d.sdt}</td>
+      <td style="max-width:200px;white-space:normal">${d.ghi_chu}</td>
+      <td>${d.nguoi_ra_soat}</td>
+      <td>${d.ngay_ra_soat}</td>
+      <td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="goToThua('${d.id}')">📍 Xem</button> <button class="btn" style="padding:3px 8px;font-size:11px;color:var(--danger)" onclick="deleteEdit('${d.id}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function goToThua(id) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'map'));
+  ['view-map','view-table','view-dashboard','view-report','view-help'].forEach(elid => {
+    document.getElementById(elid).classList.toggle('hidden', elid !== 'view-map');
+  });
+  setTimeout(()=>{
+    if (state.map) state.map.invalidateSize();
+    selectThua(id, null);
+  }, 60);
+}
+
+function deleteEdit(id) {
+  if (!confirm(`Xóa thông tin rà soát của thửa ${id}?`)) return;
+  delete state.edits[id];
+  saveEdits();
+  renderReport();
+  toast('Đã xóa','ok');
+}
+
+function exportReportJson() {
+  const data = getReportData();
+  if (!data.length) { toast('Chưa có dữ liệu','err'); return; }
+  const out = {
+    ten_du_an: 'Rà soát đất Công ty CP Chè Long Phú',
+    don_vi: 'UBND xã Phú Cát',
+    ngay_xuat: new Date().toISOString(),
+    tong_so_thua_da_rasoat: data.length,
+    du_lieu: data,
+  };
+  const blob = new Blob([JSON.stringify(out, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `rasoat_chelongphu_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast('Đã xuất JSON','ok');
+}
+
+function exportReportExcel() {
+  const data = getReportData();
+  if (!data.length) { toast('Chưa có dữ liệu','err'); return; }
+  if (typeof XLSX === 'undefined') { toast('Thư viện xuất Excel chưa tải','err'); return; }
+
+  // Sheet 1: BIỂU TỔNG HỢP
+  const headers = [
+    'STT','Tờ BĐ','Thửa','Xã cũ','Chủ sử dụng','Loại đất','DT bản đồ (m²)','DT thực tế (m²)','DT bàn giao (m²)',
+    'Thời gian khoán','Đề xuất xử lý','Ghi chú gốc Biểu 3',
+    'Pháp lý hiện tại','Trạng thái kê khai',
+    'Loại công trình','DT công trình (m²)','Năm xây',
+    'SĐT chủ SD','Người liên hệ thay',
+    'Ghi chú rà soát','Số ảnh hiện trạng','Số giấy tờ','Người rà soát','Ngày rà soát'
+  ];
+  const rows = data.map((d,i) => [
+    i+1, d.tbd, d.thua, d.xa_cu, d.ten, d.loai, d.dt, d.dt_tt, d.dt_bg,
+    d.tg_khoan, d.de_xuat, d.nn,
+    d.phap_ly, d.ke_khai,
+    d.ct_loai, d.ct_dt, d.ct_nam,
+    d.sdt, d.nguoi_lh,
+    d.ghi_chu,
+    (d.anh_ht || []).length,
+    (d.anh_gt || []).length,
+    d.nguoi_ra_soat, d.ngay_ra_soat
+  ]);
+
+  const titleRows = [
+    ['BIỂU TỔNG HỢP KẾT QUẢ RÀ SOÁT THỬA ĐẤT'],
+    ['Dự án: Rà soát đất Công ty CP Chè Long Phú - UBND xã Phú Cát'],
+    [`Ngày xuất: ${new Date().toLocaleDateString('vi-VN')} - Tổng số thửa đã rà soát: ${data.length}`],
+    [],
+    headers,
+    ...rows
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(titleRows);
+  // Merge title cells
+  ws['!merges'] = [
+    {s:{r:0,c:0},e:{r:0,c:headers.length-1}},
+    {s:{r:1,c:0},e:{r:1,c:headers.length-1}},
+    {s:{r:2,c:0},e:{r:2,c:headers.length-1}},
+  ];
+  // Column widths
+  ws['!cols'] = [
+    {wch:5},{wch:6},{wch:7},{wch:12},{wch:25},{wch:10},{wch:11},{wch:11},{wch:11},
+    {wch:22},{wch:25},{wch:30},
+    {wch:22},{wch:22},
+    {wch:18},{wch:11},{wch:8},
+    {wch:15},{wch:18},
+    {wch:30},{wch:18},{wch:12}
+  ];
+
+  // Sheet 2: TỔNG KẾT
+  const byPhapLy = {}, byKeKhai = {}, byNguoi = {}, byDeXuat = {}, byXa = {};
+  let tongDT = 0;
+  data.forEach(d => {
+    tongDT += +d.dt || 0;
+    if (d.phap_ly) byPhapLy[d.phap_ly] = (byPhapLy[d.phap_ly]||0)+1;
+    if (d.ke_khai) byKeKhai[d.ke_khai] = (byKeKhai[d.ke_khai]||0)+1;
+    if (d.nguoi_ra_soat) byNguoi[d.nguoi_ra_soat] = (byNguoi[d.nguoi_ra_soat]||0)+1;
+    if (d.de_xuat) byDeXuat[d.de_xuat] = (byDeXuat[d.de_xuat]||0)+1;
+    if (d.xa_cu) byXa[d.xa_cu] = (byXa[d.xa_cu]||0)+1;
+  });
+
+  const sumRows = [
+    ['BÁO CÁO TỔNG KẾT RÀ SOÁT'],
+    [`Ngày xuất: ${new Date().toLocaleDateString('vi-VN')}`],
+    [],
+    ['Tổng số thửa đã rà soát', data.length],
+    ['Tổng số thửa toàn khu', state.features.length],
+    ['Tỷ lệ hoàn thành', `${(data.length/state.features.length*100).toFixed(2)}%`],
+    ['Tổng diện tích đã rà soát (m²)', tongDT],
+    ['Tổng diện tích đã rà soát (ha)', +(tongDT/10000).toFixed(2)],
+    ['Số cán bộ tham gia', Object.keys(byNguoi).length],
+    [],
+    ['PHÂN BỔ THEO XÃ CŨ',''],
+    ...Object.entries(byXa).map(([k,v]) => [k, v]),
+    [],
+    ['PHÂN BỔ THEO ĐỀ XUẤT XỬ LÝ',''],
+    ...Object.entries(byDeXuat).map(([k,v]) => [k, v]),
+    [],
+    ['PHÂN BỔ THEO PHÁP LÝ HIỆN TẠI',''],
+    ...Object.entries(byPhapLy).map(([k,v]) => [k, v]),
+    [],
+    ['PHÂN BỔ THEO TRẠNG THÁI KÊ KHAI',''],
+    ...Object.entries(byKeKhai).map(([k,v]) => [k, v]),
+    [],
+    ['SỐ THỬA RÀ SOÁT THEO CÁN BỘ',''],
+    ...Object.entries(byNguoi).map(([k,v]) => [k, v]),
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(sumRows);
+  ws2['!merges'] = [
+    {s:{r:0,c:0},e:{r:0,c:1}},
+    {s:{r:1,c:0},e:{r:1,c:1}}
+  ];
+  ws2['!cols'] = [{wch:42},{wch:18}];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws2, 'Tổng kết');
+  XLSX.utils.book_append_sheet(wb, ws, 'Biểu chi tiết');
+
+  const filename = `BieuRaSoat_CheLongPhu_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.xlsx`;
+  XLSX.writeFile(wb, filename);
+  toast('Đã xuất Excel: ' + filename, 'ok');
+}
+
+/* ============================================================================
+ * EDIT MODAL (cũ - đổi sang panel)
  * ============================================================================ */
 let editingId = null;
-function openEditModal(id) {
+function openEditPanel(id) {
   editingId = id;
+  // Mobile: đóng rightbar đang mở để không che edit panel
+  if (isMobile()) {
+    document.getElementById('rightbar').classList.remove('mobile-open');
+    document.getElementById('mobile-backdrop').classList.remove('show');
+  }
   const ed = state.edits[id] || {};
-  document.getElementById('edit-thua-id').textContent = id;
+  document.getElementById('edit-thua-id').textContent = `(Tờ ${id.split('-')[0]} — Thửa ${id.split('-')[1]})`;
   document.getElementById('edit-phap-ly').value = ed.phap_ly || '';
   document.getElementById('edit-ke-khai').value = ed.ke_khai || '';
   document.getElementById('edit-ct-dt').value = ed.ct_dt || '';
@@ -636,14 +998,28 @@ function openEditModal(id) {
   document.getElementById('edit-ghi-chu').value = ed.ghi_chu || '';
   document.getElementById('edit-nguoi-ra-soat').value = ed.nguoi_ra_soat || '';
   document.getElementById('edit-ngay-ra-soat').value = ed.ngay_ra_soat || new Date().toISOString().slice(0,10);
-  document.getElementById('edit-modal').classList.add('open');
+
+  // Load ảnh đã lưu vào pendingFiles để preview
+  pendingFiles = {
+    anh_ht: (ed.anh_ht || []).slice(),
+    anh_gt: (ed.anh_gt || []).slice()
+  };
+  renderImagePreview('anh_ht');
+  renderImagePreview('anh_gt');
+
+  document.getElementById('edit-panel').classList.add('open');
 }
-function closeEditModal() {
-  document.getElementById('edit-modal').classList.remove('open');
+function closeEditPanel() {
+  document.getElementById('edit-panel').classList.remove('open');
+  pendingFiles = { anh_ht: [], anh_gt: [] };
 }
+// Backward compat
+function openEditModal(id) { openEditPanel(id); }
+function closeEditModal() { closeEditPanel(); }
+
 function saveEditClassification() {
   if (!editingId) return;
-  state.edits[editingId] = {
+  const newEdit = {
     phap_ly: document.getElementById('edit-phap-ly').value,
     ke_khai: document.getElementById('edit-ke-khai').value,
     ct_dt: document.getElementById('edit-ct-dt').value,
@@ -655,15 +1031,30 @@ function saveEditClassification() {
     nguoi_ra_soat: document.getElementById('edit-nguoi-ra-soat').value,
     ngay_ra_soat: document.getElementById('edit-ngay-ra-soat').value,
   };
+  // Thêm ảnh nếu có
+  if (pendingFiles.anh_ht.length) newEdit.anh_ht = pendingFiles.anh_ht.slice();
+  if (pendingFiles.anh_gt.length) newEdit.anh_gt = pendingFiles.anh_gt.slice();
+
+  state.edits[editingId] = newEdit;
   // Bỏ key rỗng
   Object.keys(state.edits[editingId]).forEach(k => {
-    if (!state.edits[editingId][k]) delete state.edits[editingId][k];
+    const v = state.edits[editingId][k];
+    if (v === '' || v == null || (Array.isArray(v) && !v.length)) {
+      delete state.edits[editingId][k];
+    }
   });
   if (Object.keys(state.edits[editingId]).length === 0) delete state.edits[editingId];
 
-  saveEdits();
-  closeEditModal();
-  toast('Đã lưu vào trình duyệt','ok');
+  try {
+    saveEdits();
+    closeEditPanel();
+    toast('Đã lưu vào trình duyệt','ok');
+  } catch(e) {
+    // localStorage quota exceeded - rất có thể do ảnh quá nhiều
+    toast('Lỗi: bộ nhớ trình duyệt đầy. Bỏ bớt ảnh hoặc xuất Excel để giải phóng.','err');
+    return;
+  }
+
   // Refresh chi tiết
   const feature = state.features.find(f => f.properties.id === editingId);
   if (feature) renderThuaDetail(feature);
@@ -687,7 +1078,47 @@ function toast(msg, type='') {
 }
 
 // Mobile placeholder
-function closeRightbarMobile(){}
+function closeRightbarMobile(){
+  document.getElementById('rightbar').classList.remove('mobile-open');
+  document.getElementById('mobile-backdrop').classList.remove('show');
+}
+
+/* ============================================================================
+ * MOBILE - sidebar / rightbar trượt
+ * ============================================================================ */
+function isMobile() { return window.matchMedia('(max-width: 768px)').matches; }
+
+function openMobileSidebar() {
+  document.getElementById('sidebar').classList.add('mobile-open');
+  document.getElementById('mobile-backdrop').classList.add('show');
+}
+
+function openMobileRightbar() {
+  document.getElementById('rightbar').classList.add('mobile-open');
+  document.getElementById('mobile-backdrop').classList.add('show');
+}
+
+function closeMobilePanels() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('rightbar').classList.remove('mobile-open');
+  document.getElementById('mobile-backdrop').classList.remove('show');
+}
+
+// Khi bấm filter trong sidebar mobile, tự đóng sidebar để xem map
+function initMobileBehavior() {
+  // Đóng sidebar khi tích filter (mobile thôi)
+  document.querySelectorAll('[data-filter]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      // Không tự đóng sidebar khi đổi filter, người dùng có thể muốn đổi nhiều
+    });
+  });
+  // Khi click nav-btn, đóng các panel mobile
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (isMobile()) closeMobilePanels();
+    });
+  });
+}
 
 // ===== Start =====
 init();

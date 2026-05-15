@@ -68,17 +68,30 @@ input, select, textarea { font-family: inherit; }
 }
 .topbar .spacer { flex: 1; }
 .topbar .nav-btn {
-  background: none;
-  border: 0.5px solid transparent;
-  padding: 6px 12px;
+  background: var(--bg-soft);
+  border: 0.5px solid var(--border);
+  padding: 8px 18px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--text-primary);
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
-.topbar .nav-btn:hover { background: var(--bg-soft); }
-.topbar .nav-btn.active {
+.topbar .nav-btn .nav-icon { font-size: 14px; line-height: 1; }
+.topbar .nav-btn:hover {
+  background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
+}
+.topbar .nav-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(15,110,86,0.25);
 }
 
 /* ===== Main grid ===== */
@@ -204,7 +217,7 @@ input, select, textarea { font-family: inherit; }
 }
 .map-overlay-bl {
   position: absolute;
-  bottom: 100px;
+  bottom: 24px;
   left: 12px;
   background: rgba(255,255,255,0.95);
   border-radius: 8px;
@@ -226,35 +239,30 @@ input, select, textarea { font-family: inherit; }
   border-radius: 2px;
 }
 
-/* ===== Logo Thanh Hà ở góc dưới trái map ===== */
+/* ===== Logo Thanh Hà đặt ở dưới cùng sidebar ===== */
 .thanha-footer {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  background: rgba(255,255,255,0.97);
-  border-radius: 8px;
-  padding: 8px 12px 8px 8px;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--border);
   display: flex;
   align-items: center;
-  gap: 10px;
-  z-index: 500;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  border: 0.5px solid var(--border);
-  max-width: 320px;
+  gap: 8px;
 }
 .thanha-footer img {
-  height: 42px;
+  height: 36px;
   width: auto;
   flex-shrink: 0;
 }
 .thanha-footer .th-text {
   font-size: 10.5px;
-  line-height: 1.35;
+  line-height: 1.3;
   color: var(--text-secondary);
+  min-width: 0;
+  flex: 1;
 }
 .thanha-footer .th-line1 {
   text-transform: uppercase;
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 600;
   letter-spacing: 0.4px;
   color: var(--text-tertiary);
@@ -263,12 +271,27 @@ input, select, textarea { font-family: inherit; }
 .thanha-footer .th-line2 {
   font-weight: 600;
   color: var(--accent);
-  font-size: 11px;
-  margin-bottom: 2px;
+  font-size: 10.5px;
+  margin-bottom: 3px;
+  line-height: 1.35;
 }
 .thanha-footer .th-line3 {
-  font-size: 10.5px;
-  color: var(--text-secondary);
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 700;
+  background: var(--accent-soft);
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* Sidebar dùng flex để Thanh Hà đẩy xuống dưới cùng */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+}
+.sidebar > :not(.thanha-footer) {
+  flex-shrink: 0;
 }
 
 /* ===== Right panel - thông tin thửa ===== */
@@ -550,50 +573,105 @@ table.simple th.num, table.simple td.num { text-align: right; font-variant-numer
 .help-section ul, .help-section ol { margin-left: 20px; font-size: 13px; line-height: 1.65; }
 .help-section li { margin-bottom: 4px; }
 
-/* ===== Modal ===== */
-.modal-bg {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 2000;
+/* ===== Preview ảnh trong panel cập nhật ===== */
+.img-preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.img-preview-grid .img-item {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 0.5px solid var(--border);
+  cursor: pointer;
+}
+.img-preview-grid .img-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.img-preview-grid .img-item .pdf-icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  background: var(--bg-soft);
+  font-size: 22px;
 }
-.modal-bg.open { display: flex; }
-.modal {
-  background: var(--bg-panel);
-  border-radius: 10px;
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow: hidden;
+.img-preview-grid .img-item .del-btn {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  background: rgba(163,45,45,0.85);
+  color: white;
+  border: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 10px;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
-.modal-header {
-  padding: 14px 18px;
+.img-preview-grid .img-item .del-btn:hover { background: var(--danger); }
+
+/* ===== Edit Panel (trượt từ góc dưới trái map area) ===== */
+.edit-panel {
+  position: fixed;
+  bottom: 16px;
+  left: 256px; /* sau sidebar 240px + 16px */
+  width: 460px;
+  max-height: calc(100vh - 100px);
+  background: var(--bg-panel);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  z-index: 1500;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.edit-panel.open { display: flex; }
+.edit-panel-header {
+  padding: 12px 16px;
   border-bottom: 0.5px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: var(--accent);
+  color: white;
 }
-.modal-header .title { font-weight: 500; font-size: 14px; }
-.modal-header .close {
-  background: none; border: none; cursor: pointer; font-size: 18px; color: var(--text-secondary);
+.edit-panel-header .title { font-weight: 600; font-size: 13.5px; }
+.edit-panel-header .title small { font-weight: 400; opacity: 0.85; }
+.edit-panel-header .close {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
 }
-.modal-body {
-  padding: 16px 18px;
+.edit-panel-header .close:hover { background: rgba(255,255,255,0.3); }
+.edit-panel-body {
+  padding: 14px 16px;
   overflow-y: auto;
 }
-.modal-footer {
-  padding: 12px 18px;
+.edit-panel-footer {
+  padding: 10px 16px;
   border-top: 0.5px solid var(--border);
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  background: var(--bg-soft);
 }
 
 .form-row {
@@ -649,14 +727,215 @@ table.simple th.num, table.simple td.num { text-align: right; font-variant-numer
 /* ===== Mobile ===== */
 .bottom-sheet-close { display: none; }
 
-@media (max-width: 900px) {
-  .main { grid-template-columns: 1fr; }
-  .sidebar, .rightbar { display: none; }
+/* ===== Nút FAB mở filter (chỉ hiện ở mobile) ===== */
+.mobile-fab {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 52px;
+  height: 52px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 800;
+  box-shadow: 0 4px 14px rgba(15,110,86,0.45);
+  align-items: center;
+  justify-content: center;
+}
+.mobile-fab.show { display: flex; }
+.mobile-fab.right { right: 86px; background: var(--info); box-shadow: 0 4px 14px rgba(24,95,165,0.45); }
+
+/* Backdrop khi sidebar mobile mở */
+.mobile-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1900;
+}
+.mobile-backdrop.show { display: block; }
+
+/* ============ TABLET (≤1100px) ============ */
+@media (max-width: 1100px) {
+  .main { grid-template-columns: 220px 1fr 280px; }
+  .topbar .nav-btn { padding: 7px 13px; font-size: 13px; }
+  .topbar .nav-btn .icon-text { display: none; }
+}
+
+/* ============ MOBILE (≤768px) ============ */
+@media (max-width: 768px) {
+  body { font-size: 13px; }
+
+  /* Topbar gọn lại */
+  .app { grid-template-rows: 50px 1fr; }
+  .topbar { padding: 0 10px; gap: 8px; flex-wrap: nowrap; overflow-x: auto; }
+  .topbar .logo { width: 28px; height: 28px; font-size: 11px; flex-shrink: 0; }
+  .topbar .title { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .topbar .subtitle { display: none; }
-  .topbar .title { font-size: 13px; }
-  .thanha-footer { max-width: 200px; padding: 6px 10px; }
-  .thanha-footer img { height: 32px; }
-  .thanha-footer .th-line2 { font-size: 10px; }
-  .thanha-footer .th-line3 { font-size: 9.5px; }
-  .map-overlay-bl { bottom: 80px; }
+  .topbar .spacer { display: none; }
+  .topbar .nav-btn {
+    padding: 7px 9px; font-size: 11.5px;
+    white-space: nowrap; flex-shrink: 0;
+    gap: 0;
+  }
+  .topbar .nav-btn .nav-icon { font-size: 16px; }
+  .topbar .nav-btn .nav-text { display: none; }
+  .topbar .nav-btn.active .nav-text { display: inline; margin-left: 4px; font-size: 11px; }
+
+  /* Main: chỉ 1 cột chứa map */
+  .main { grid-template-columns: 1fr; position: relative; }
+
+  /* Sidebar trượt từ trái */
+  .sidebar {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    bottom: 0;
+    width: 88%;
+    max-width: 320px;
+    z-index: 2000;
+    transform: translateX(-100%);
+    transition: transform 0.25s;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.25);
+  }
+  .sidebar.mobile-open { transform: translateX(0); }
+
+  /* Rightbar trượt từ phải khi click thửa */
+  .rightbar {
+    position: fixed;
+    top: 50px;
+    right: 0;
+    bottom: 0;
+    width: 92%;
+    max-width: 380px;
+    z-index: 2000;
+    transform: translateX(100%);
+    transition: transform 0.25s;
+    box-shadow: -4px 0 16px rgba(0,0,0,0.25);
+    border-left: none;
+  }
+  .rightbar.mobile-open { transform: translateX(0); }
+  .bottom-sheet-close {
+    display: flex;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: var(--bg-soft);
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  /* Edit panel full-width bottom sheet */
+  .edit-panel {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 85vh;
+    border-radius: 12px 12px 0 0;
+  }
+
+  /* Map overlays nhỏ lại */
+  .map-overlay-tr {
+    top: 8px;
+    right: 8px;
+    padding: 5px 8px;
+    font-size: 10.5px;
+  }
+  .map-overlay-bl {
+    bottom: 16px;
+    left: 8px;
+    padding: 6px 8px;
+    font-size: 10px;
+    max-width: 200px;
+  }
+  .map-overlay-bl .legend-row { margin-bottom: 2px; }
+  .map-overlay-bl .swatch { width: 11px; height: 11px; }
+
+  /* Hiện FAB */
+  .mobile-fab { display: flex; }
+
+  /* Table view: scroll ngang */
+  .view-table, .view-dashboard, .view-report, .view-help {
+    padding: 12px;
+  }
+  .table-controls { flex-direction: column; align-items: stretch; }
+  .table-controls input,
+  .table-controls select,
+  .table-controls .btn { width: 100%; }
+  .thua-table th, .thua-table td {
+    padding: 6px 8px;
+    font-size: 11.5px;
+  }
+
+  /* Dashboard cards: 2 cột */
+  .dashboard-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .dashboard-card { padding: 10px; }
+  .dashboard-card .value { font-size: 18px; }
+
+  /* Dashboard tables: scroll ngang */
+  .dashboard-section { padding: 12px; overflow-x: auto; }
+
+  /* Form: 1 cột */
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+
+  /* Help cards padding nhỏ */
+  .help-section { padding: 12px 14px; }
+  .help-section h2 { font-size: 13.5px; }
+  .help-section p, .help-section li { font-size: 12.5px; }
+
+  /* Thua detail trong rightbar mobile */
+  .detail-grid { grid-template-columns: 1fr; }
+  .detail-grid .label { font-size: 9.5px; }
+
+  /* Input + button kích thước phù hợp ngón tay (tối thiểu 36px) */
+  input, select, textarea, button {
+    min-height: 36px;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 9px 10px;
+    font-size: 14px; /* >=16px tránh zoom iOS, dùng 14px là OK với hầu hết */
+  }
+  .btn { padding: 8px 14px; min-height: 36px; }
+
+  /* Pagination buttons to hơn */
+  .pagination button { min-width: 34px; padding: 6px 10px; }
+
+  /* Img preview lớn hơn cho dễ bấm xóa */
+  .img-preview-grid .img-item { width: 64px; height: 64px; }
+  .img-preview-grid .img-item .del-btn { width: 22px; height: 22px; font-size: 12px; }
+
+  /* Ẩn coord display - không cần thiết trên mobile */
+  .coord-display { display: none; }
+}
+
+/* ============ MOBILE NHỎ (≤480px) ============ */
+@media (max-width: 480px) {
+  .topbar .nav-btn { padding: 5px 8px; font-size: 11px; }
+  .topbar .title { font-size: 12px; }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .map-overlay-bl { font-size: 9.5px; max-width: 160px; padding: 5px 7px; }
+}
+
+/* ============ Landscape orientation ============ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .app { grid-template-rows: 44px 1fr; }
+  .sidebar { top: 44px; }
+  .rightbar { top: 44px; }
+  .map-overlay-bl { display: none; }
+  .mobile-fab { width: 44px; height: 44px; bottom: 12px; right: 12px; font-size: 18px; }
+  .mobile-fab.right { right: 64px; }
 }
