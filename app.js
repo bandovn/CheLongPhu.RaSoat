@@ -1463,9 +1463,19 @@ function initMobileBehavior() {
     });
   });
   // Khi click nav-btn, đóng các panel mobile
+  // NHƯNG: nút "Liên hệ" cần MỞ rightbar nên không đóng
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (isMobile()) closeMobilePanels();
+      if (!isMobile()) return;
+      const view = btn.dataset.view;
+      if (view === 'contact') {
+        // Với nút Liên hệ: chỉ đóng sidebar trái (giữ rightbar phải)
+        document.getElementById('sidebar').classList.remove('mobile-open');
+        // Backdrop vẫn giữ vì rightbar đang dùng nó
+      } else {
+        // Các nút khác: đóng cả 2
+        closeMobilePanels();
+      }
     });
   });
 }
